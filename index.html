@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>도형 놀이터 - 도형과 넓이 배우기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF8EC; --card:#FFFFFF; --ink:#3B3A36; --sub:#7A756B;
+    --accent:#FF9F1C; --accent2:#FF6B35; --line:#E8DFCB;
+    --blue:#3B82F6; --green:#10B981; --purple:#8B5CF6; --pink:#EC4899; --gray:#64748B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 10% 10%, rgba(255,159,28,.10), transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(59,130,246,.08), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Gowun Dodum', '맑은 고딕', sans-serif;
+    min-height:100vh; padding:20px 24px 30px;
+  }
+  header{max-width:1160px; margin:0 auto 16px; text-align:center;}
+  header h1{
+    font-family:'Jua', sans-serif; font-size:clamp(26px,4vw,40px); color:var(--accent2);
+    letter-spacing:1px;
+  }
+  header h1 .hl{color:var(--blue);}
+  header p{margin-top:6px; color:var(--sub); font-size:15px;}
+  main{
+    max-width:1160px; margin:0 auto; display:grid;
+    grid-template-columns:minmax(0,1fr) 360px; gap:20px; align-items:start;
+  }
+  @media (max-width:960px){ main{grid-template-columns:1fr;} }
+
+  .board-card{background:var(--card); border-radius:20px; padding:16px; box-shadow:0 6px 24px rgba(120,90,30,.10);}
+  .toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  button{
+    font-family:'Jua',sans-serif; font-size:15px; cursor:pointer;
+    border:none; border-radius:12px; padding:8px 16px;
+    background:#FFF1D6; color:#B25E00; transition:.15s transform,.15s box-shadow;
+  }
+  button:hover{transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.12);}
+  button:active{transform:translateY(0);}
+  button:disabled{opacity:.4; cursor:not-allowed; transform:none; box-shadow:none;}
+  button.primary{background:var(--accent); color:#fff;}
+  button.ghost{background:#F1EFEA; color:var(--sub);}
+  .hint{
+    margin-left:auto; font-size:13.5px; color:var(--sub); background:#FFF7E3;
+    border:1px dashed #E5C87F; border-radius:10px; padding:6px 12px;
+  }
+  svg#board{width:100%; height:auto; display:block; touch-action:manipulation; cursor:crosshair;}
+  .dot{fill:#C9BFA8; transition:fill .15s, r .15s;}
+  .dot.start{fill:var(--accent2);}
+  .dot.hover{fill:var(--accent);}
+  .grid-line{stroke:#EFE7D2; stroke-width:1;}
+  .edge{stroke:#5B5449; stroke-width:4; stroke-linecap:round;}
+  .preview{stroke:var(--accent); stroke-width:4; stroke-linecap:round; stroke-dasharray:2 10; opacity:.85;}
+  .start-ring{fill:none; stroke:var(--accent2); stroke-width:3; stroke-dasharray:4 5;
+    animation:spin 6s linear infinite; transform-origin:center; }
+  @keyframes spin{to{stroke-dashoffset:-90;}}
+  .vertex{fill:#fff; stroke:#5B5449; stroke-width:2.5;}
+  .fill-anim{animation:fillIn .5s ease;}
+  @keyframes fillIn{from{opacity:0;} to{opacity:1;}}
+  .example-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center;}
+  .example-row .lbl{font-size:13px; color:var(--sub); font-family:'Jua',sans-serif;}
+  .example-row button{font-size:13.5px; padding:6px 12px;}
+  .history{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; min-height:34px;}
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px;
+    background:#F6F3EC; border-radius:999px; padding:5px 12px; color:var(--ink);
+    border:1px solid var(--line); animation:pop .3s ease;
+  }
+  .chip b{color:var(--accent2); font-family:'Jua',sans-serif;}
+  @keyframes pop{from{transform:scale(.6); opacity:0;} to{transform:scale(1); opacity:1;}}
+
+  .info-card{
+    background:var(--card); border-radius:20px; padding:22px;
+    box-shadow:0 6px 24px rgba(120,90,30,.10);
+    position:sticky; top:16px; min-height:420px;
+  }
+  .info-empty{text-align:center; color:var(--sub); padding-top:60px;}
+  .info-empty .big{font-size:56px; margin-bottom:12px;}
+  .shape-name{
+    font-family:'Jua',sans-serif; font-size:30px; letter-spacing:1px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .shape-name .badge{width:18px; height:18px; border-radius:5px; display:inline-block;}
+  .shape-sub{color:var(--sub); font-size:14px; margin:6px 0 16px;}
+  .formula-box{
+    background:#FFF7E3; border:2px solid #F2DCA8; border-radius:14px;
+    padding:14px 16px; margin-bottom:14px;
+  }
+  .formula-title{font-family:'Jua',sans-serif; font-size:16px; color:#B25E00; margin-bottom:8px;}
+  .formula-main{font-family:'Jua',sans-serif; font-size:21px; color:var(--ink); line-height:1.5;}
+  .steps{list-style:none; margin-bottom:14px;}
+  .steps li{
+    display:flex; align-items:baseline; gap:10px; padding:9px 4px;
+    border-bottom:1px dashed var(--line); font-size:15.5px;
+  }
+  .steps .n{
+    font-family:'Jua',sans-serif; font-size:14px; color:#fff; background:var(--blue);
+    min-width:22px; height:22px; border-radius:50%; display:inline-flex;
+    align-items:center; justify-content:center; transform:translateY(3px);
+  }
+  .steps b{font-family:'Jua',sans-serif; color:var(--accent2);}
+  .result-big{
+    text-align:center; background:linear-gradient(135deg,#FFF3D6,#FFE6CC);
+    border-radius:14px; padding:14px; margin-bottom:12px;
+  }
+  .result-big .lbl{font-size:14px; color:var(--sub);}
+  .result-big .val{font-family:'Jua',sans-serif; font-size:42px; color:var(--accent2); line-height:1.2;}
+  .result-big .val small{font-size:20px;}
+  .friendly{
+    font-size:14.5px; color:var(--sub); background:#F4F7FF; border-radius:12px;
+    padding:12px 14px; line-height:1.7;
+  }
+  .friendly b{color:var(--blue);}
+  .warn{
+    text-align:center; color:#C0392B; font-family:'Jua',sans-serif; font-size:19px;
+    background:#FDEDEA; border-radius:14px; padding:18px; margin-top:30px;
+  }
+  footer{max-width:1160px; margin:18px auto 0; text-align:center; color:var(--sub); font-size:13px;}
+  footer .unit{
+    display:inline-block; background:#fff; border:1px solid var(--line);
+    border-radius:999px; padding:4px 14px; margin-bottom:6px;
+  }
+  .btn-done{animation:pulse 1.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.5);} 50%{box-shadow:0 0 0 10px rgba(255,107,53,0);}}
+  .tri-list{font-size:15px; color:var(--ink); line-height:1.9;}
+  .tri-list b{color:var(--blue); font-family:'Jua',sans-serif;}
+</style>
+</head>
+<body>
+<header>
+  <h1>✏️ 도형 <span class="hl">놀이터</span></h1>
+  <p>점을 차례로 눌러 선을 잇고, 처음 점을 다시 누르면 도형 완성! 어떤 도형인지, 넓이가 얼마인지 알려줄게요.</p>
+</header>
+<main>
+  <section class="board-card">
+    <div class="toolbar">
+      <button id="btnUndo" class="ghost">↩ 되돌리기</button>
+      <button id="btnReset" class="primary">새로 그리기</button>
+      <div class="hint" id="hint">먼저 아무 점이나 눌러보세요!</div>
+    </div>
+    <svg id="board" viewBox="0 0 596 508" role="img" aria-label="점 판"></svg>
+    <div class="example-row">
+      <span class="lbl">🎁 예시 보기 :</span>
+      <button data-ex="square">정사각형</button>
+      <button data-ex="rect">직사각형</button>
+      <button data-ex="tri">삼각형</button>
+      <button data-ex="rtri">직각삼각형</button>
+      <button data-ex="para">평행사변형</button>
+      <button data-ex="trap">사다리꼴</button>
+      <button data-ex="rhom">마름모</button>
+    </div>
+    <div class="history" id="history"></div>
+  </section>
+  <aside class="info-card" id="infoCard"></aside>
+</main>
+<footer>
+  <span class="unit">📐 점과 점 사이가 1칸 → 작은 사각형 1개의 넓이는 <b>1 (칸²)</b></span>
+  <div>선생님·학부모님과 함께: 삼각형·사다리꼴 넓이는 두 배 크기의 사각형과 비교하면 이해하기 쉬워요!</div>
+</footer>
+
+<script>
+"use strict";
+/* ================= 설정 ================= */
+const COLS = 13, ROWS = 11;      // 점 개수
+const SP = 44, M = 34;          // 점 간격, 여백
+const VW = M*2 + (COLS-1)*SP;    // viewBox 가로
+const VH = M*2 + (ROWS-1)*SP;    // viewBox 세로
+
+  const svg   = document.getElementById('board');
+svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+
+const hintEl = document.getElementById('hint');
+const infoCard = document.getElementById('infoCard');
+const historyEl = document.getElementById('history');
+
+let pts = [];        // 그리는 중인 점들 (격자 좌표 {x,y})
+let done = false;    // 완성 여부
+let hoverDot = null;
+let history = [];    // {name, area}
+let exTimer = null;  // 예시 애니메이션 타이머
+
+const sx = p => M + p.x*SP;
+const sy = p => M + p.y*SP;
+const P = (x,y)=>({x,y});
+
+/* ================= SVG 구성 ================= */
+const layers = {};
+for(const id of ['gridL','shapeFill','edges','previewL','startG','dotsG','hoverG','vertexG']){
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('id',id); svg.appendChild(g); layers[id]=g;
+}
+// 격자선
+for(let c=0;c<COLS;c++){
+  const l=line(layers.gridL, M+c*SP, M, M+c*SP, VH-M, 'grid-line');
+}
+for(let r=0;r<ROWS;r++){
+  line(layers.gridL, M, M+r*SP, VW-M, M+r*SP, 'grid-line');
+}
+// 점
+for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+  const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  el.setAttribute('cx',M+c*SP); el.setAttribute('cy',M+r*SP); el.setAttribute('r',6.5);
+  el.classList.add('dot'); el.dataset.c=c; el.dataset.r=r;
+  layers.dotsG.appendChild(el);
+}
+// 미리보기 선
+const previewL=line(layers.previewL,0,0,0,0,'preview'); previewL.setAttribute('visibility','hidden');
+
+function line(parent,x1,y1,x2,y2,cls){
+  const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+  if(cls)l.setAttribute('class',cls);
+  parent.appendChild(l); return l;
+}
+function tag(t,attrs,parent){ const e=document.createElementNS('http://www.w3.org/2000/svg',t);
+  for(const k in attrs)e.setAttribute(k,attrs[k]); (parent||svg).appendChild(e); return e; }
+
+/* ================= 유틸 ================= */
+const sub=(a,b)=>P(a.x-b.x,a.y-b.y);
+const cross=(a,b)=>a.x*b.y-a.y*b.x;
+const dot=(a,b)=>a.x*b.x+a.y*b.y;
+const len=v=>Math.hypot(v.x,v.y);
+const fmt=n=>{ const r=Math.round(n*100)/100; return (Math.abs(r-Math.round(r))<1e-9)?String(Math.round(r)):r.toFixed(2).replace(/\.?0+$/,''); };
+const same=(a,b)=>a.x===b.x&&a.y===b.y;
+
+/* shoelace 넓이 */
+function shoelace(p){
+  let s=0;
+  for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length]; s+=a.x*b.y-b.x*a.y;}
+  return Math.abs(s)/2;
+}
+/* 선분 교차 검사(인접 제외, 끝점 공유 무시) */
+function segInt(p1,p2,p3,p4){
+  const d1=cross(sub(p2,p1),sub(p3,p1)), d2=cross(sub(p2,p1),sub(p4,p1));
+  const d3=cross(sub(p4,p3),sub(p1,p3)), d4=cross(sub(p4,p3),sub(p2,p3));
+  return (d1*d2<0 && d3*d4<0);
+}
+function selfIntersects(p){
+  const n=p.length;
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    if(Math.abs(i-j)<=1||(i===0&&j===n-1))continue;
+    if(segInt(p[i],p[(i+1)%n],p[j],p[(j+1)%n]))return true;
+  }
+  return false;
+}
+
+/* ================= 그리기 렌더 ================= */
+function render(){
+  layers.edges.innerHTML=''; layers.startG.innerHTML='';
+  layers.vertexG.innerHTML=''; layers.dotsG.querySelectorAll('.dot').forEach(d=>d.classList.remove('start'));
+  layers.shapeFill.innerHTML='';
+
+  if(done && curInfo){
+    const poly=tag('polygon',{points:pts.map(p=>`${sx(p)},${sy(p)}`).join(' ')},layers.shapeFill);
+    poly.setAttribute('fill',curInfo.color);
+    poly.setAttribute('fill-opacity','0.32');
+    poly.classList.add('fill-anim');
+  }
+  for(let i=0;i+1<pts.length;i++)
+    line(layers.edges,sx(pts[i]),sy(pts[i]),sx(pts[i+1]),sy(pts[i+1]),'edge');
+  if(done&&pts.length>2)
+    line(layers.edges,sx(pts[pts.length-1]),sy(pts[pts.length-1]),sx(pts[0]),sy(pts[0]),'edge');
+  pts.forEach(p=>tag('circle',{cx:sx(p),cy:sy(p),r:7,'class':'vertex'},layers.vertexG));
+  if(!done&&pts.length>0){
+    const first=pts[0];
+    layers.dotsG.querySelector(`[data-c="${first.x}"][data-r="${first.y}"]`)?.classList.add('start');
+    if(pts.length>=3){
+      const ring=tag('circle',{cx:sx(first),cy:sy(first),r:15,'class':'start-ring'},layers.startG);
+    }
+  }
+}
+function setHint(t){ hintEl.textContent=t; }
+
+/* ================= 마우스/터치 ================= */
+function eventDot(e){
+  const r=svg.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*VW;
+  const y=(e.clientY-r.top)/r.height*VH;
+  const c=Math.round((x-M)/SP), row=Math.round((y-M)/SP);
+  if(c<0||c>=COLS||row<0||row>=ROWS)return null;
+  return P(c,row);
+}
+svg.addEventListener('pointermove',e=>{
+  if(done)return;
+  const d=eventDot(e);
+  if(d&&d.x===hoverDot?.x&&d.y===hoverDot?.y)return;
+  layers.dotsG.querySelectorAll('.dot.hover').forEach(el=>el.classList.remove('hover'));
+  hoverDot=d;
+  if(d){
+    const el=layers.dotsG.querySelector(`[data-c="${d.x}"][data-r="${d.y}"]`);
+    if(el)el.classList.add('hover');
+    if(pts.length>0){
+      previewL.setAttribute('visibility','visible');
+      previewL.setAttribute('x1',sx(pts[pts.length-1])); previewL.setAttribute('y1',sy(pts[pts.length-1]));
+      previewL.setAttribute('x2',sx(d)); previewL.setAttribute('y2',sy(d));
+    }
+  }else{
+    hoverDot=null; previewL.setAttribute('visibility','hidden');
+  }
+});
+svg.addEventListener('pointerleave',()=>{ previewL.setAttribute('visibility','hidden');
+  layers.dotsG.querySelectorAll('.dot.hover').forEach(el=>el.classList.remove('hover')); });
+svg.addEventListener('pointerdown',e=>{
+  if(done||exRunning)return;
+  const d=eventDot(e); if(!d)return;
+  if(pts.length===0){ pts.push(d); render(); setHint('다음 점을 눌러 이어주세요!'); return; }
+  if(same(d,pts[pts.length-1]))return;
+  if(same(d,pts[0])){
+    if(pts.length>=3){ closeShape(); return; }
+    return;
+  }
+  if(pts.some(p=>same(p,d))){ setHint('이미 찍은 점이에요! 아직 안 찍은 점을 눌러주세요.'); return; }
+  pts.push(d); render();
+  if(pts.length>=3) setHint('시작점(빨간 점 ●)을 눌러 도형을 완성하세요!');
+  else setHint('점 '+pts.length+'개 연결! 계속 이어주세요.');
+});
+
+/* ================= 도형 완성 ================= */
+function mergeCollinear(p){
+  p=[...p];
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(let i=1;i<p.length-1;i++){
+      const a=sub(p[i],p[i-1]), b=sub(p[i+1],p[i]);
+      if(cross(a,b)===0 && dot(a,b)>0){ p.splice(i,1); changed=true; break; }
+    }
+    if(!changed && p.length>=3){
+      const a=sub(p[p.length-1],p[p.length-2]), b=sub(p[0],p[p.length-1]);
+      if(cross(a,b)===0 && dot(a,b)>0){ p.pop(); changed=true; }
+      else{
+        const a2=sub(p[0],p[p.length-1]), b2=sub(p[1],p[0]);
+        if(cross(a2,b2)===0 && dot(a2,b2)>0){ p.shift(); changed=true; }
+      }
+    }
+  }
+  return p;
+}
+function closeShape(){
+  previewL.setAttribute('visibility','hidden');
+  let p=mergeCollinear(pts);
+  if(p.length<3){
+    curInfo=null;
+    infoCard.innerHTML=`<div class="info-empty"><div class="big">🤔</div>
+      <div>모든 점이 한 줄로 서 있으면 도형이 되지 않아요!<br>꼭짓점이 다른 방향에 있도록 다시 그려보세요.</div></div>`;
+    done=true; pts=p; render(); updateDoneUI(); return;
+  }
+  if(selfIntersects(p)){
+    curInfo=null;
+    infoCard.innerHTML=`<div class="warn">앗, 선끼리 겹쳤어요! 😵<br>
+      <span style="font-size:14px;font-family:'Gowun Dodum';color:#8D6E63;">선이 서로 교차하면 도형의 넓이를 구할 수 없어요.<br>'새로 그리기'를 눌러 다시 도전!</span></div>`;
+    done=true; pts=p; render(); updateDoneUI(); return;
+  }
+  if(shoelace(p)<1e-9){
+    curInfo=null;
+    infoCard.innerHTML=`<div class="info-empty"><div class="big">🤔</div>
+      <div>모든 점이 한 줄로 서 있으면 도형이 되지 않아요!<br>꼭짓점이 다른 방향에 있도록 다시 그려보세요.</div></div>`;
+    done=true; pts=p; render(); updateDoneUI(); return;
+  }
+  pts=p; done=true;
+  curInfo=classify(pts);
+  render(); updateDoneUI();
+  showInfo(curInfo);
+  history.unshift({name:curInfo.title, area:curInfo.area});
+  history=history.slice(0,8); renderHistory();
+  setHint('완성! 🎉 어떤 도형이고, 넓이가 얼마인지 옆에 나타났어요.');
+}
+function updateDoneUI(){
+  const btn=document.getElementById('btnReset');
+  btn.classList.toggle('btn-done',done);
+  document.getElementById('btnUndo').disabled=done;
+}
+
+/* ================= 분류기 ================= */
+function classify(p){
+  const n=p.length, area=shoelace(p);
+  const v=[]; for(let i=0;i<n;i++)v.push(sub(p[(i+1)%n],p[i]));
+  const lsq=v.map(a=>dot(a,a));
+  const F={
+    n, area, side:v.map(len), title:'', color:'#94A3B8', kind:'',
+    diag:(i,j)=>len(sub(p[j],p[i])),
+  };
+  const polyName=({3:'삼각형',5:'오각형',6:'육각형',7:'칠각형',8:'팔각형'})[n]||`${n}각형`;
+
+  if(n===3){
+    F.kind='tri'; F.color='#F59E0B';
+    const right = lsq.some((_,i)=>dot(v[i],v[(i+1)%3])===0);
+    const isosc = lsq[0]===lsq[1]||lsq[1]===lsq[2]||lsq[2]===lsq[0];
+    const equi  = lsq[0]===lsq[1]&&lsq[1]===lsq[2];
+    F.title = equi?'정삼각형': (right&&isosc)?'직각 이등변 삼각형': right?'직각삼각형': isosc?'이등변삼각형':'삼각형';
+    // 밑변: 가로/세로 방향 변 우선, 그중 가장 긴 변
+    let bi=-1;
+    for(let i=0;i<3;i++)
+      if(v[i].x===0||v[i].y===0){ if(bi<0||lsq[i]>lsq[bi])bi=i; }
+    if(bi<0){ bi=0; for(let i=1;i<3;i++)if(lsq[i]>lsq[bi])bi=i; }
+    F.baseIdx=bi; F.base=F.side[bi];
+    F.height=2*area/F.base;
+    return F;
+  }
+  if(n===4){
+    const para = cross(v[0],v[2])===0 && cross(v[1],v[3])===0;
+    const allEq = lsq[0]===lsq[1]&&lsq[1]===lsq[2]&&lsq[2]===lsq[3];
+    const rightAng = dot(v[0],v[1])===0;
+    const p13 = cross(v[0],v[2])===0, p24 = cross(v[1],v[3])===0;
+    if(allEq && rightAng){
+      F.kind='square'; F.color='#3B82F6'; F.title='정사각형';
+      F.sideLen=Math.sqrt(lsq[0]); return F;
+    }
+    if(para && rightAng){
+      F.kind='rect'; F.color='#3B82F6'; F.title='직사각형';
+      F.w=Math.sqrt(lsq[0]); F.h=Math.sqrt(lsq[1]);
+      if(F.w<F.h){const t=F.w;F.w=F.h;F.h=t;}
+      return F;
+    }
+    if(allEq){
+      F.kind='rhom'; F.color='#EC4899'; F.title='마름모';
+      const d1=F.diag(0,2), d2=F.diag(1,3);
+      F.d1=Math.max(d1,d2); F.d2=Math.min(d1,d2);
+      return F;
+    }
+    if(para){
+      F.kind='para'; F.color='#10B981'; F.title='평행사변형';
+      // 밑변: 가로/세로 방향 변 우선, 그중 가장 긴 변
+      let bi=-1;
+      for(let i=0;i<4;i++)
+        if(v[i].x===0||v[i].y===0){ if(bi<0||lsq[i]>lsq[bi])bi=i; }
+      if(bi<0){ bi=0; for(let i=1;i<4;i++)if(lsq[i]>lsq[bi])bi=i; }
+      F.baseIdx=bi; F.base=F.side[bi];
+      // 높이: 밑변에서 맞은편 변까지의 수직 거리
+      const bv=v[bi];
+      const opp=p[(bi+2)%4];
+      F.height=Math.abs(cross(bv,sub(opp,p[bi])))/len(bv);
+      return F;
+    }
+    if(p13!==p24){
+      F.kind='trap'; F.color='#8B5CF6'; F.title='사다리꼴';
+      let b1,b2;
+      if(p13){ b1=len(v[0]); b2=len(v[2]); F.pair=[0,2]; }
+      else   { b1=len(v[1]); b2=len(v[3]); F.pair=[1,3]; }
+      const sum=b1+b2;
+      F.top=Math.min(b1,b2); F.bottom=Math.max(b1,b2);
+      F.height=2*area/sum;
+      return F;
+    }
+    F.kind='quad'; F.color='#64748B'; F.title='사각형';
+    F.t1=shoelace([p[0],p[1],p[2]]); F.t2=shoelace([p[0],p[2],p[3]]);
+    return F;
+  }
+  F.kind='poly'; F.color='#0EA5E9'; F.title=polyName;
+  F.tris=[]; for(let i=1;i<n-1;i++)F.tris.push(shoelace([p[0],p[i],p[i+1]]));
+  return F;
+}
+
+/* ================= 정보 카드 ================= */
+let curInfo=null;
+function formulaBlock(title, main){
+  return `<div class="formula-box"><div class="formula-title">📐 ${title}</div>
+    <div class="formula-main">${main}</div></div>`;
+}
+function stepsBlock(items){
+  return `<ol class="steps">${items.map((s,i)=>`<li><span class="n">${i+1}</span><span>${s}</span></li>`).join('')}</ol>`;
+}
+function resultBlock(area,unit){
+  const a=fmt(area);
+  return `<div class="result-big"><div class="lbl">넓이</div>
+    <div class="val">${a}<small> ${unit||'칸²'}</small></div></div>`;
+}
+function friendlyBlock(t){ return `<div class="friendly">💡 ${t}</div>`; }
+
+function showInfo(F){
+  let html=`<div class="shape-name"><span class="badge" style="background:${F.color}"></span>${F.title}</div>
+    <div class="shape-sub">${F.n}개의 점을 연결해서 만들었어요. 변의 개수는 ${F.n}개예요!</div>`;
+  switch(F.kind){
+    case 'square':
+      html+=formulaBlock('정사각형 넓이 공식','넓이 = 한 변 × 한 변');
+      html+=stepsBlock([`한 변의 길이 = <b>${fmt(F.sideLen)} 칸</b>`,
+        `${fmt(F.sideLen)} × ${fmt(F.sideLen)} = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('정사각형은 네 변의 길이가 모두 같고, 네 모서리가 모두 직각인 도형이에요.');
+      break;
+    case 'rect':
+      html+=formulaBlock('직사각형 넓이 공식','넓이 = 가로 × 세로');
+      html+=stepsBlock([`가로 = <b>${fmt(F.w)} 칸</b>, 세로 = <b>${fmt(F.h)} 칸</b>`,
+        `${fmt(F.w)} × ${fmt(F.h)} = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('점을 하나씩 세어 보세요. 가로로 <b>'+fmt(F.w)+'칸</b>, 세로로 <b>'+fmt(F.h)+'칸</b>이면, 작은 사각형이 '+fmt(F.area)+'개 모인 것과 같아요!');
+      break;
+    case 'tri':
+      html+=formulaBlock('삼각형 넓이 공식','넓이 = 밑변 × 높이 ÷ 2');
+      html+=stepsBlock([`밑변(가장 긴 변) = <b>${fmt(F.base)} 칸</b>`,
+        `높이(밑변에서 꼭짓점까지의 수직 거리) = <b>${fmt(F.height)} 칸</b>`,
+        `${fmt(F.base)} × ${fmt(F.height)} ÷ 2 = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('삼각형 두 개를 붙이면 평행사변형이 돼요. 그래서 평행사변형 넓이의 <b>딱 절반</b>이 삼각형의 넓이예요!');
+      break;
+    case 'para':
+      html+=formulaBlock('평행사변형 넓이 공식','넓이 = 밑변 × 높이');
+      html+=stepsBlock([`밑변 = <b>${fmt(F.base)} 칸</b>`,
+        `높이(밑변에서 맞은편 변까지의 수직 거리) = <b>${fmt(F.height)} 칸</b>`,
+        `${fmt(F.base)} × ${fmt(F.height)} = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('왼쪽의 삼각형을 오려서 오른쪽에 붙이면 <b>직사각형</b>이 돼요! 그래서 가로×세로로 넓이를 구할 수 있어요.');
+      break;
+    case 'trap':
+      html+=formulaBlock('사다리꼴 넓이 공식','넓이 = (윗변 + 밑변) × 높이 ÷ 2');
+      html+=stepsBlock([`서로 평행한 두 변 : 윗변 = <b>${fmt(F.top)} 칸</b>, 밑변 = <b>${fmt(F.bottom)} 칸</b>`,
+        `높이(두 변 사이 거리) = <b>${fmt(F.height)} 칸</b>`,
+        `(${fmt(F.top)} + ${fmt(F.bottom)}) × ${fmt(F.height)} ÷ 2 = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('똑같은 사다리꼴을 거꾸로 위에 하나 더 붙이면 밑변이 (윗변+밑변)인 <b>평행사변형</b>이 돼요! 그래서 ÷2를 해요.');
+      break;
+    case 'rhom':
+      html+=formulaBlock('마름모 넓이 공식','넓이 = 대각선 × 대각선 ÷ 2');
+      html+=stepsBlock([`두 대각선(서로 수직으로 만나는 선)의 길이 : <b>${fmt(F.d1)} 칸</b>, <b>${fmt(F.d2)} 칸</b>`,
+        `${fmt(F.d1)} × ${fmt(F.d2)} ÷ 2 = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('마름모의 대각선은 서로를 <b>반으로</b> 가로질러요! 그래서 대각선 두 개를 곱하고 2로 나눠요.');
+      break;
+    case 'quad':
+      html+=formulaBlock('일반 사각형은 이렇게!','네 개의 점을 대각선으로 이어 <b>삼각형 2개</b>로 나눠요.');
+      html+=stepsBlock([`삼각형① 넓이 = <b>${fmt(F.t1)} 칸²</b>`,
+        `삼각형② 넓이 = <b>${fmt(F.t2)} 칸²</b>`,
+        `${fmt(F.t1)} + ${fmt(F.t2)} = <b>${fmt(F.area)} 칸²</b>`]);
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('어떤 사각형이든 대각선 하나를 그으면 삼각형 두 개로 나눌 수 있어요. 각각 <b>밑변×높이÷2</b>로 구해 더하면 돼요!');
+      break;
+    default:
+      html+=formulaBlock(`${F.title} 넓이 구하기`,`한 점에서 순서대로 선을 그어 <b>삼각형 ${F.tris.length}개</b>로 나눠요.`);
+      html+=`<div class="tri-list">삼각형들의 넓이 : ${F.tris.map(t=>`<b>${fmt(t)}</b>`).join(' + ')}<br>
+        다 더하면 <b style="color:var(--accent2)">${fmt(F.area)} 칸²</b></div>`;
+      html+=resultBlock(F.area);
+      html+=friendlyBlock('모든 다각형은 삼각형들로 나눌 수 있어요! 삼각형은 넓이의 <b>기본 단위</b> 같은 도형이에요.');
+  }
+  infoCard.innerHTML=html;
+}
+
+function renderHistory(){
+  historyEl.innerHTML = history.length
+    ? history.map(h=>`<span class="chip">🏆 <b>${h.name}</b> ${fmt(h.area)} 칸²</span>`).join('')
+    : '<span style="font-size:13px;color:var(--sub)">여기에 지금까지 만든 도형이 쌓여요!</span>';
+}
+renderHistory();
+
+/* ================= 버튼 ================= */
+document.getElementById('btnUndo').addEventListener('click',()=>{
+  if(exRunning)stopExample();
+  if(done){ resetAll(); return; }
+  pts.pop(); render();
+  setHint(pts.length===0?'먼저 아무 점이나 눌러보세요!':(pts.length>=3?'시작점(빨간 점 ●)을 눌러 도형을 완성하세요!':'점 '+pts.length+'개 연결! 계속 이어주세요.'));
+});
+document.getElementById('btnReset').addEventListener('click',resetAll);
+function resetAll(){
+  stopExample();
+  pts=[]; done=false; curInfo=null;
+  previewL.setAttribute('visibility','hidden');
+  render(); updateDoneUI();
+  infoCard.innerHTML=emptyCard();
+  setHint('먼저 아무 점이나 눌러보세요!');
+}
+function emptyCard(){
+  return `<div class="info-empty"><div class="big">👀</div>
+  <div>도형을 완성하면<br>이곳에 이름과 <b>넓이 구하는 공식</b>이 나타나요!</div></div>`;
+}
+infoCard.innerHTML=emptyCard();
+
+/* ================= 예시 ================= */
+const EXAMPLES={
+  square:{pts:[[2,2],[6,2],[6,6],[2,6]]},
+  rect:{pts:[[1,3],[10,3],[10,7],[1,7]]},
+  tri:{pts:[[1,8],[11,8],[6,1]]},
+  rtri:{pts:[[1,9],[10,9],[1,2]]},
+  para:{pts:[[1,7],[5,3],[10,3],[6,7]]},
+  trap:{pts:[[1,7],[4,3],[8,3],[10,7]]},
+  rhom:{pts:[[3,3],[6,4],[7,7],[4,6]]},
+};
+let exRunning=false;
+document.querySelectorAll('[data-ex]').forEach(btn=>{
+  btn.addEventListener('click',()=>runExample(EXAMPLES[btn.dataset.ex].pts));
+});
+function stopExample(){ if(exTimer){clearInterval(exTimer); exTimer=null;} exRunning=false; }
+function runExample(list){
+  stopExample(); resetAll(); exRunning=true;
+  const P2=list.map(([x,y])=>P(x,y));
+  let i=0;
+  exTimer=setInterval(()=>{
+    if(i<P2.length){ pts.push(P2[i]); render(); i++;
+      setHint(i===1?'예시 그리는 중... 점을 따라가 보세요!':'점 '+i+'개 연결!');
+    }else{
+      stopExample();
+      closeShape();
+    }
+  },420);
+}
+</script>
+</body>
+</html>
