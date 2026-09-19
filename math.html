@@ -314,9 +314,20 @@ function genProblem(r){
   }
 }
 
+/* ====== 중복 문제 방지 ====== */
+let recentSigs=[];
+function uniqueProblem(r){
+  let p,tries=0;
+  do{ p=genProblem(r); tries++; }
+  while(tries<80 && recentSigs.includes(p.text));
+  recentSigs.push(p.text);
+  if(recentSigs.length>16) recentSigs.shift();
+  return p;
+}
+
 /* ====== 문제 흐름 ====== */
 function nextProblem(){
-  problem=genProblem(roomNum);
+  problem=uniqueProblem(roomNum);
   attempts=0;
   problemEl.textContent=problem.text+' =';
   $('qType').textContent=problem.type;

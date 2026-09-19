@@ -267,6 +267,27 @@ function genProblem(d){
     hint:`${den}조각이 1판이니, ${num}조각은 1판(${den}개)+${rem}개 → 1과 ${rem}/${den}!`};
 }
 
+/* ====== 중복 문제 방지 ====== */
+let recentSigs=[];
+function sigOf(p){
+  switch(p.type){
+    case 'make': case 'read': return `f:${p.num}/${p.den}`;
+    case 'compare': return `c:${[p.a1,p.a2].sort((x,y)=>x-y).join(',')}@${p.den}`;
+    case 'add': return `a:${p.a1+p.a2}/${p.den}`;
+    case 'sub': return `s:${p.a1}-${p.a2}/${p.den}`;
+    case 'improper': return `i:${p.num}/${p.den}`;
+    case 'diffadd': return `d:${p.a1}/${p.den1}+${p.a2}/${p.den2}`;
+  }
+}
+function uniqueProblem(d){
+  let p,tries=0;
+  do{ p=genProblem(d); tries++; }
+  while(tries<60 && recentSigs.includes(sigOf(p)));
+  recentSigs.push(sigOf(p));
+  if(recentSigs.length>14) recentSigs.shift();
+  return p;
+}
+
 /* ====== 피자 SVG ====== */
 function pizzaSVG(den,state,opts){
   opts=opts||{};
@@ -375,7 +396,7 @@ function bubbleText(p){
   }
 }
 function setupProblem(){
-  problem=genProblem(day);
+  problem=uniqueProblem(day);
   attempts=0; busy=false; curPizza=null; answerEls=[];
   pizzaMain.innerHTML=''; liveFrac.innerHTML=''; eqRow.innerHTML=''; answerUI.innerHTML='';
   custEmoji.textContent=CUSTS[custIdx%CUSTS.length];
