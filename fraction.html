@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>분수 피자 가게 - 초등 수학 놀이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF6F2; --card:#FFFFFF; --ink:#3B3A36; --sub:#7A756B;
+    --accent:#FF9F1C; --accent2:#FF6B35; --line:#F0E3D8;
+    --good:#0E7C4A; --bad:#C0392B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,107,53,.10), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(255,159,28,.10), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Gowun Dodum','맑은 고딕',sans-serif;
+    min-height:100vh; padding:18px 24px 34px;
+  }
+  .wrap{max-width:840px; margin:0 auto;}
+  header{display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap;}
+  header h1{font-family:'Jua',sans-serif; font-size:clamp(22px,4vw,34px); color:var(--accent2); letter-spacing:1px;}
+  header .money{
+    margin-left:auto; font-size:14px; color:#7A4B12; background:#fff;
+    border:1px solid var(--line); border-radius:999px; padding:5px 14px;
+    white-space:nowrap; font-family:'Jua',sans-serif;
+  }
+  a.btn-menu{
+    font-family:'Jua',sans-serif; font-size:15px; text-decoration:none; color:#3B6BB5;
+    background:#EDF2FA; border-radius:12px; padding:8px 16px; transition:.15s; display:inline-block;
+  }
+  a.btn-menu:hover{transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.12);}
+  .card{
+    background:var(--card); border-radius:20px; padding:16px 18px;
+    box-shadow:0 6px 24px rgba(160,90,50,.12); margin-bottom:18px;
+  }
+  .shop-head{display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;}
+  .day{font-family:'Jua',sans-serif; font-size:19px;}
+  .dots{display:flex; gap:7px; margin-left:auto; align-items:center;}
+  .dot{width:13px; height:13px; border-radius:50%; background:#EADFCE;}
+  .dot.done{background:var(--accent2);}
+  .dot.cur{background:#fff; border:3px solid var(--accent2); width:15px; height:15px; animation:pulse 1.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.25);}}
+  .customer-row{display:flex; align-items:center; gap:16px; margin:8px 0 4px;}
+  .customer{
+    width:84px; height:84px; border-radius:50%; background:#FFF3DC; border:3px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:46px; flex-shrink:0; transition:.2s;
+  }
+  .customer.happy{animation:hop .55s;}
+  @keyframes hop{0%,100%{transform:translateY(0);} 40%{transform:translateY(-12px) rotate(-8deg);} 70%{transform:translateY(0) rotate(6deg);}}
+  .bubble{
+    position:relative; background:#fff; border:2px solid var(--line); border-radius:16px;
+    padding:12px 18px; font-size:16.5px; line-height:2; flex:1; min-height:64px;
+  }
+  .bubble::before{
+    content:''; position:absolute; left:-9px; top:50%; width:14px; height:14px; background:#fff;
+    border-left:2px solid var(--line); border-bottom:2px solid var(--line);
+    transform:translateY(-50%) rotate(45deg);
+  }
+  .pizza-zone{display:flex; flex-direction:column; align-items:center; padding:12px 0 0;}
+  .pizza-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;}
+  .pizza{display:block; height:auto; max-width:100%;}
+  .pizza.interactive g{cursor:pointer;}
+  .pizza.interactive g:hover{filter:brightness(1.07);}
+  .plus{font-family:'Jua',sans-serif; font-size:38px; color:var(--accent2);}
+  .pz-label{font-size:13px; color:var(--sub); text-align:center; margin-top:2px; font-family:'Jua',sans-serif;}
+  .live-frac{
+    min-height:54px; display:flex; align-items:center; justify-content:center; gap:10px;
+    font-size:16px; color:var(--sub); margin-top:8px; flex-wrap:wrap;
+  }
+  .frac{
+    font-family:'Jua',sans-serif; display:inline-flex; flex-direction:column; align-items:center;
+    line-height:1.1; vertical-align:middle; margin:0 3px;
+  }
+  .frac .fnum{border-bottom:3px solid currentColor; padding:0 7px; font-size:1.05em;}
+  .frac .fden{padding:0 7px; font-size:1.05em;}
+  .eq{
+    font-family:'Jua',sans-serif; font-size:clamp(26px,6vw,36px); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap;
+  }
+  .prob-head{display:flex; justify-content:space-between; align-items:center; max-width:560px; margin:0 auto 4px;}
+  .tag{background:#FDEEE2; border-radius:999px; padding:4px 14px; font-size:13.5px; color:#B25E00; font-family:'Jua',sans-serif;}
+  .streak{font-family:'Jua',sans-serif; font-size:16px; color:var(--accent2); min-height:24px;}
+  .q-text{text-align:center; font-size:17px; margin:8px 0 10px; line-height:1.7;}
+  .answer-ui{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:8px 0 4px; align-items:center;}
+  .chip{
+    font-family:'Jua',sans-serif; font-size:20px; width:46px; height:46px; border-radius:50%;
+    border:none; background:#FFF3DC; color:#7A5B12; box-shadow:0 3px 0 #E8CFA0;
+    cursor:pointer; transition:.1s; touch-action:manipulation; user-select:none;
+  }
+  .chip:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
+  .chip.reveal{background:var(--accent); color:#fff; box-shadow:0 3px 0 #C77400; animation:pop .3s;}
+  .choice{
+    font-family:'Jua',sans-serif; font-size:19px; border:none; border-radius:14px;
+    background:#FFF3DC; color:#7A5B12; box-shadow:0 3px 0 #E8CFA0; padding:12px 22px;
+    cursor:pointer; transition:.1s; display:inline-flex; align-items:center; gap:6px;
+    touch-action:manipulation; user-select:none;
+  }
+  .choice:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
+  .choice.reveal{background:var(--accent); color:#fff; box-shadow:0 3px 0 #C77400; animation:pop .3s;}
+  .choice.big{font-size:21px; padding:14px 30px; background:var(--accent); color:#fff; box-shadow:0 4px 0 #C77400;}
+  @keyframes pop{from{transform:scale(.7);} to{transform:scale(1);}}
+  .feedback{text-align:center; font-size:15px; min-height:28px; margin:6px 0 2px; color:var(--sub);}
+  .feedback.good{color:var(--good); font-weight:bold;}
+  .feedback.bad{color:var(--bad);}
+  @keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);}}
+  .shake{animation:shake .32s;}
+  .done-overlay{
+    position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.75); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .5s;
+  }
+  .done-overlay.show{opacity:1; pointer-events:auto;}
+  .done-box{text-align:center; padding:22px;}
+  .done-box .big{font-size:46px; margin-bottom:8px;}
+  .done-box h2{font-family:'Jua',sans-serif; font-size:30px; color:var(--accent2); margin-bottom:8px;}
+  .done-box p{color:var(--sub); font-size:15px;}
+  .done-box .stats{font-size:14px; margin:10px 0 18px; font-family:'Jua',sans-serif; color:#7A4B12;}
+  .done-box button{
+    font-family:'Jua',sans-serif; font-size:17px; border:none; border-radius:14px; cursor:pointer;
+    background:var(--accent); color:#fff; padding:12px 26px; box-shadow:0 4px 0 #C77400; transition:.12s;
+  }
+  .done-box button:active{transform:translateY(3px); box-shadow:0 1px 0 #C77400;}
+  .shop-card{position:relative;}
+  footer{max-width:840px; margin:6px auto 0; text-align:center; color:var(--sub); font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="index.html" class="btn-menu">← 메뉴</a>
+    <h1>🍕 분수 피자 가게</h1>
+    <span class="money" id="moneyEl"></span>
+  </header>
+
+  <section class="card shop-card">
+    <div class="shop-head">
+      <span class="day" id="dayLabel"></span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="customer-row">
+      <div class="customer" id="customer"><span id="custEmoji">🐻</span></div>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="pizza-zone">
+      <div class="pizza-row" id="pizzaMain"></div>
+      <div class="live-frac" id="liveFrac"></div>
+    </div>
+    <div class="done-overlay" id="dayOverlay">
+      <div class="done-box">
+        <div class="big">🎉🍕🎉</div>
+        <h2>오늘 영업 끝!</h2>
+        <p id="dayMsg"></p>
+        <p class="stats" id="dayStats"></p>
+        <button id="btnNextDay">내일도 가게 열기 🍕</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="prob-head">
+      <span class="tag" id="qType"></span>
+      <span class="streak" id="streak"></span>
+    </div>
+    <div class="q-text" id="qText"></div>
+    <div class="eq" id="eqRow"></div>
+    <div class="answer-ui" id="answerUI"></div>
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <footer>영업일이 지날수록 주문이 어려워져요! (초등 3~4학년 분수 단원)</footer>
+</div>
+<script>
+"use strict";
+/* ====== 유틸 & 효과음 ====== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[ri(0,a.length-1)];
+const shuffle=a=>{const r=a.slice();for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;};
+let AC=null;
+function tone(f,t0,dur,type='sine',vol=.07){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,AC.currentTime+t0);
+    g.gain.exponentialRampToValueAtTime(vol,AC.currentTime+t0+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+t0+dur);
+    o.connect(g);g.connect(AC.destination);
+    o.start(AC.currentTime+t0);o.stop(AC.currentTime+t0+dur+.05);
+  }catch(e){}
+}
+const sfx={
+  ok(){tone(660,0,.12);tone(880,.1,.16);},
+  no(){tone(196,0,.22,'square',.045);},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.2));}
+};
+
+/* ====== 분수 표시 ====== */
+function fracHTML(n,d){
+  return `<span class="frac"><span class="fnum">${n}</span><span class="fden">${d}</span></span>`;
+}
+function mixedHTML(w,n,d){
+  return `<span>${w}과</span>${fracHTML(n,d)}`;
+}
+
+/* ====== 문제 만들기 (영업일별 난이도) ====== */
+function genProblem(d){
+  const T = d===1?['make','read']
+         : d===2?['make','read']
+         : d===3?['compare','read']
+         : d===4?['add','make']
+         : d===5?['sub','add']
+         : ['improper','add','sub','compare'];
+  const t=T[ri(0,T.length-1)];
+  if(t==='make'||t==='read'){
+    const den=pick(d===1?[2,3,4] : d===2?[4,5,6,8] : [3,4,5,6,8,10]);
+    const num=ri(1,den-1);
+    if(t==='make') return {type:'make',num,den,
+      hint:`전체 ${den}조각 중 토핑 ${num}개! 전체 조각 수(${den})가 분모, 토핑 수(${num})가 분자예요.`};
+    return {type:'read',num,den,
+      hint:'전체 조각 수가 분모, 토핑 올린 조각 수가 분자!'};
+  }
+  if(t==='compare'){
+    const den=ri(2,8);
+    const a1=ri(0,den), a2=ri(0,den);
+    return {type:'compare',a1,a2,den,
+      hint:'조각 크기가 똑같으니, 토핑 조각이 더 많은 쪽이 더 커요! 세어 보세요.'};
+  }
+  if(t==='add'){
+    const den=ri(3,8);
+    let a1,a2;
+    if(d<6){ a1=ri(1,den-2); a2=ri(1,den-1-a1); }
+    else   { a1=ri(1,den-1); a2=ri(1,den-1); }
+    return {type:'add',a1,a2,den,ans:a1+a2,
+      hint:`분모는 그대로! 분자끼리만 더해요: ${a1}+${a2}=${a1+a2}`};
+  }
+  if(t==='sub'){
+    const den=ri(3,8);
+    const a1=ri(2,den-1), a2=ri(1,a1-1);
+    return {type:'sub',a1,a2,den,ans:a1-a2,
+      hint:`분모는 그대로! 분자끼리만 빼요: ${a1}−${a2}=${a1-a2}`};
+  }
+  const den=ri(2,8);
+  const rem=ri(1,den-1);
+  const num=den+rem;
+  return {type:'improper',num,den,rem,
+    hint:`${den}조각이 1판이니, ${num}조각은 1판(${den}개)+${rem}개 → 1과 ${rem}/${den}!`};
+}
+
+/* ====== 피자 SVG ====== */
+function pizzaSVG(den,state,opts){
+  opts=opts||{};
+  const R=opts.r||120, crust=R*0.12;
+  const C=R+crust+4;
+  const r=R-crust*1.5;
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${C*2} ${C*2}`);
+  svg.classList.add('pizza');
+  if(opts.interactive)svg.classList.add('interactive');
+  svg.style.width=(opts.w||230)+'px';
+  const cx=C, cy=C;
+  svg.appendChild(mk('circle',{cx,cy,r:R+crust/2,fill:'#E8A24B'}));
+  svg.appendChild(mk('circle',{cx,cy,r:R-crust/2,fill:'#F3E2C3'}));
+  const wedges=[];
+  for(let i=0;i<den;i++){
+    const a0=(-90+i*360/den)*Math.PI/180;
+    const a1=(-90+(i+1)*360/den)*Math.PI/180;
+    const x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0);
+    const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+    const dPath=`M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1} Z`;
+    const g=mk('g',{});
+    g.appendChild(mk('path',{d:dPath,fill:'#F7EBD3',stroke:'#E4D3B4','stroke-width':2}));
+    const top=mk('g',{opacity:0});
+    top.appendChild(mk('path',{d:dPath,fill:'#FFC93C',stroke:'#EFA735','stroke-width':2}));
+    const am=(a0+a1)/2, am2=(a0+am)/2, am3=(am+a1)/2;
+    [[r*0.42,am2],[r*0.72,am],[r*0.42,am3]].forEach(([rr,a])=>{
+      top.appendChild(mk('circle',{cx:cx+rr*Math.cos(a),cy:cy+rr*Math.sin(a),r:r*0.085,fill:'#E05252'}));
+    });
+    g.appendChild(top);
+    const eaten=mk('g',{opacity:0});
+    const ex=cx+r*0.55*Math.cos(am), ey=cy+r*0.55*Math.sin(am);
+    eaten.appendChild(mk('circle',{cx:ex,cy:ey,r:r*0.26,fill:'rgba(60,40,20,.45)'}));
+    const et=mk('text',{x:ex,y:ey+r*0.09,'text-anchor':'middle','font-size':r*0.26});
+    et.textContent='😋';
+    eaten.appendChild(et);
+    g.appendChild(eaten);
+    wedges.push({g,top,eaten});
+    svg.appendChild(g);
+  }
+  function refresh(){
+    wedges.forEach((wd,i)=>{
+      const s=state[i];
+      wd.top.setAttribute('opacity',(s===1||s===2)?1:0);
+      wd.eaten.setAttribute('opacity',s===2?1:0);
+    });
+  }
+  if(opts.interactive){
+    wedges.forEach((wd,i)=>{
+      wd.g.addEventListener('click',()=>{
+        state[i]=state[i]===1?0:1;
+        refresh(); opts.onChange&&opts.onChange(state);
+      });
+    });
+  }
+  refresh();
+  return {svg,state,refresh};
+}
+function mk(t,attrs){const e=document.createElementNS(NS,t);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function mkState(den,topped,eaten){
+  const s=Array(den).fill(0);
+  for(let i=0;i<topped;i++)s[i]=1;
+  if(eaten)for(let i=0;i<eaten;i++)s[topped-1-i]=2;
+  return s;
+}
+
+/* ====== 상태 ====== */
+const ALL_CUSTS=['🐱','🐶','🦊','🐻','🐼','🐰','🐯','🦁','🐨','🐵','🐸','🐹'];
+const TYPE_LABEL={make:'분수 만들기',read:'분수 읽기',compare:'크기 비교',add:'분수의 덧셈',sub:'분수의 뺄셈',improper:'가분수와 대분수'};
+const CUST_PER_DAY=5;
+let day=1, custIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
+let todayMoney=0, totalMoney=parseInt(localStorage.getItem('pizzaMoney')||'0',10)||0;
+let problem=null, curPizza=null, CUSTS=shuffle(ALL_CUSTS);
+let answerEls=[];
+
+const pizzaMain=$('pizzaMain'), liveFrac=$('liveFrac'), bubble=$('bubble'),
+      eqRow=$('eqRow'), answerUI=$('answerUI'), feedbackEl=$('feedback'),
+      customerEl=$('customer'), custEmoji=$('custEmoji'), streakEl=$('streak');
+
+/* ====== 진행 표시 ====== */
+function updateDots(){
+  const ds=[];
+  for(let i=0;i<CUST_PER_DAY;i++){
+    ds.push(`<span class="dot ${i<custIdx?'done':(i===custIdx?'cur':'')}"></span>`);
+  }
+  $('dots').innerHTML=ds.join('');
+  $('dayLabel').textContent=`영업 ${day}일차`;
+}
+function updateMoney(){
+  $('moneyEl').textContent=`💰 ${totalMoney.toLocaleString('ko-KR')}원`;
+}
+function setFeedback(t,cls){feedbackEl.textContent=t; feedbackEl.className='feedback'+(cls?' '+cls:'');}
+function shake(el){el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');}
+function updateStreak(){streakEl.textContent=streak>=2?`🔥 ${streak}연속 정답!`:'';}
+
+/* ====== 문제 흐름 ====== */
+function bubbleText(p){
+  switch(p.type){
+    case 'make': return `피자를 ${p.den}조각으로 똑같이 잘라서, 전체의 <b>${fracHTML(p.num,p.den)}</b> 만큼 토핑을 올려 주세요!`;
+    case 'read': return `우와, 맛있겠다! 이 피자의 토핑은 전체의 얼마일까요?`;
+    case 'compare': return `두 피자 중에서 어느 쪽이 더 많을까요? 골라 주세요!`;
+    case 'add': return `내가 ${fracHTML(p.a1,p.den)} 판 먹고, 동생이 ${fracHTML(p.a2,p.den)} 판 먹었어요. 다 합하면 얼마일까요?`;
+    case 'sub': return `${fracHTML(p.a1,p.den)} 판을 시켰는데 ${fracHTML(p.a2,p.den)} 판을 먹어치웠어요. 얼마나 남았을까요?`;
+    case 'improper': return `가분수 <b>${fracHTML(p.num,p.den)}</b> 를 '몇 판 몇 조각'(대분수)으로 바꿔 주세요!`;
+  }
+}
+function setupProblem(){
+  problem=genProblem(day);
+  attempts=0; busy=false; curPizza=null; answerEls=[];
+  pizzaMain.innerHTML=''; liveFrac.innerHTML=''; eqRow.innerHTML=''; answerUI.innerHTML='';
+  custEmoji.textContent=CUSTS[custIdx%CUSTS.length];
+  bubble.innerHTML=bubbleText(problem);
+  $('qType').textContent=TYPE_LABEL[problem.type];
+  updateDots(); updateStreak();
+  ({make:renderMake,read:renderRead,compare:renderCompare,
+    add:renderAdd,sub:renderSub,improper:renderImproper})[problem.type]();
+}
+function nextCustomer(){
+  custIdx++;
+  customerEl.classList.remove('happy');
+  if(custIdx>=CUST_PER_DAY){dayEnd(); return;}
+  setupProblem();
+}
+function correct(){
+  busy=true;
+  const pay=attempts===0?1000:attempts===1?500:300;
+  todayMoney+=pay; totalMoney+=pay;
+  localStorage.setItem('pizzaMoney',String(totalMoney));
+  streak++; bestStreak=Math.max(bestStreak,streak);
+  updateStreak(); updateMoney();
+  sfx.ok();
+  customerEl.classList.add('happy');
+  setFeedback(`🎉 정답! 손님이 방금갑다고 하네요. +${pay}원!`,'good');
+  setTimeout(nextCustomer,1200);
+}
+function wrong(){
+  attempts++; streak=0; updateStreak(); sfx.no();
+  if(problem.type==='make'){
+    const cur=curPizza.state.filter(s=>s===1).length;
+    shake(pizzaMain);
+    if(attempts===1) setFeedback(`주문은 ${problem.num}/${problem.den}인데, 지금은 ${cur}/${problem.den}이에요. 조각 수를 다시 맞춰 봐요!`,'bad');
+    else if(attempts===2) setFeedback('💡 '+problem.hint,'bad');
+    else revealMake();
+  }else{
+    shake(answerUI);
+    if(attempts===1) setFeedback('앗, 한번 더 생각해 볼까요?','bad');
+    else if(attempts===2) setFeedback('💡 '+problem.hint,'bad');
+    else revealChoice();
+  }
+}
+function revealMake(){
+  busy=true;
+  curPizza.state.forEach((_,i)=>curPizza.state[i]=i<problem.num?1:0);
+  curPizza.refresh();
+  liveUpdate(curPizza.state,problem.den);
+  setFeedback(`정답은 이렇게! 전체 ${problem.den}조각 중 ${problem.num}개 → ${problem.num}/${problem.den}`,'bad');
+  setTimeout(nextCustomer,1900);
+}
+function revealChoice(){
+  busy=true;
+  const el=answerEls.find(a=>a.ok);
+  if(el&&el.el)el.el.classList.add('reveal');
+  setFeedback('정답은 이거였어요! 다음 손님을 만나 봐요.','bad');
+  setTimeout(nextCustomer,1900);
+}
+function dayEnd(){
+  busy=true;
+  sfx.win();
+  $('dayMsg').textContent=`오늘 매상 ${todayMoney.toLocaleString('ko-KR')}원! 내일은 주문이 조금 더 어려워져요.`;
+  $('dayStats').textContent=`오늘 최고 연속 정답 ${bestStreak}개 · 가게 총자산 ${totalMoney.toLocaleString('ko-KR')}원`;
+  $('dayOverlay').classList.add('show');
+}
+$('btnNextDay').addEventListener('click',()=>{
+  $('dayOverlay').classList.remove('show');
+  day++; custIdx=0; todayMoney=0; bestStreak=0;
+  CUSTS=shuffle(ALL_CUSTS);
+  busy=false;
+  setupProblem();
+});
+
+/* ====== 유형별 화면 ====== */
+function liveUpdate(state,den){
+  const n=state.filter(s=>s===1).length;
+  liveFrac.innerHTML=`지금 만든 피자:
+    <span class="frac big" style="color:var(--accent2)">${fracHTML(n,den)}</span>
+    <span style="font-size:14px">(토핑 ${n}개 / 전체 ${den}조각)</span>`;
+}
+function renderMake(){
+  const p=problem;
+  const state=Array(p.den).fill(0);
+  curPizza=pizzaSVG(p.den,state,{r:118,w:240,interactive:true,onChange:st=>liveUpdate(st,p.den)});
+  pizzaMain.appendChild(curPizza.svg);
+  liveUpdate(state,p.den);
+  $('qText').innerHTML='피자 조각을 눌러 토핑을 올려요! 다 만들었으면 아래 버튼을 눌러주세요.';
+  const b=document.createElement('button');
+  b.className='choice big'; b.textContent='🍕 만들었어요!';
+  b.addEventListener('click',()=>{
+    if(busy)return;
+    const n=curPizza.state.filter(s=>s===1).length;
+    if(n===p.num)correct(); else wrong();
+  });
+  answerUI.appendChild(b);
+  setFeedback(`주문은 전체의 ${p.num}/${p.den}! 토핑 조각 수를 세어 보세요.`);
+}
+function chips(max,answer){
+  answerUI.innerHTML='';
+  answerEls=[];
+  for(let v=0;v<=max;v++){
+    const b=document.createElement('button');
+    b.className='chip'; b.textContent=v;
+    b.addEventListener('click',()=>{
+      if(busy)return;
+      if(v===answer)correct(); else wrong();
+    });
+    answerUI.appendChild(b);
+    answerEls.push({el:b,ok:v===answer});
+  }
+}
+function renderRead(){
+  const p=problem;
+  pizzaMain.appendChild(pizzaSVG(p.den,mkState(p.den,p.num),{r:110,w:230}).svg);
+  $('qText').innerHTML='토핑 올린 조각을 세어서 분자를 골라요!';
+  eqRow.innerHTML=`전체의 &nbsp;<span class="frac big" style="color:var(--accent2)"><span class="fnum">?</span><span class="fden">${p.den}</span></span>`;
+  chips(p.den,p.num);
+  setFeedback('몇 조각에 토핑이 올라가 있나요? 숫자를 눌러요!');
+}
+function renderCompare(){
+  const p=problem;
+  const row=document.createElement('div');
+  row.className='pizza-row';
+  const l=document.createElement('div');
+  l.appendChild(pizzaSVG(p.den,mkState(p.den,p.a1),{r:82,w:165}).svg);
+  const ll=document.createElement('div'); ll.className='pz-label'; ll.textContent='왼쪽 피자';
+  l.appendChild(ll);
+  const r2=document.createElement('div');
+  r2.appendChild(pizzaSVG(p.den,mkState(p.den,p.a2),{r:82,w:165}).svg);
+  const rl=document.createElement('div'); rl.className='pz-label'; rl.textContent='오른쪽 피자';
+  r2.appendChild(rl);
+  row.appendChild(l); row.appendChild(r2);
+  pizzaMain.appendChild(row);
+  $('qText').innerHTML='어느 쪽이 더 많을까요?';
+  const correctV=p.a1>p.a2?'L':p.a2>p.a1?'R':'S';
+  [['L','왼쪽이 더 많아요!'],['R','오른쪽이 더 많아요!'],['S','똑같아요!']].forEach(([v,txt])=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.textContent=txt;
+    b.addEventListener('click',()=>{ if(busy)return; v===correctV?correct():wrong(); });
+    answerUI.appendChild(b);
+    answerEls.push({el:b,ok:v===correctV});
+  });
+  setFeedback('토핑 조각 수를 세어서 골라요!');
+}
+function renderAdd(){
+  const p=problem;
+  const row=document.createElement('div');
+  row.className='pizza-row';
+  const l=document.createElement('div');
+  l.appendChild(pizzaSVG(p.den,mkState(p.den,p.a1),{r:82,w:165}).svg);
+  const ll=document.createElement('div'); ll.className='pz-label'; ll.textContent=`${p.a1}/${p.den} 판`;
+  l.appendChild(ll);
+  const r2=document.createElement('div');
+  r2.appendChild(pizzaSVG(p.den,mkState(p.den,p.a2),{r:82,w:165}).svg);
+  const rl=document.createElement('div'); rl.className='pz-label'; rl.textContent=`${p.a2}/${p.den} 판`;
+  r2.appendChild(rl);
+  const plus=document.createElement('span'); plus.className='plus'; plus.textContent='+';
+  row.appendChild(l); row.appendChild(plus); row.appendChild(r2);
+  pizzaMain.appendChild(row);
+  const improperAns=p.ans>=p.den;
+  $('qText').innerHTML=improperAns
+    ? '두 피자를 모두 합해서 <b>가분수</b>로 나타내요! (분자가 분모보다 커질 수 있어요)'
+    : '두 피자를 모두 합하면 얼마일까요? 분자를 골라요!';
+  eqRow.innerHTML=`${fracHTML(p.a1,p.den)} <span>+</span> ${fracHTML(p.a2,p.den)} <span>=</span>
+    <span class="frac big" style="color:var(--accent2)"><span class="fnum">?</span><span class="fden">${p.den}</span></span>`;
+  chips(improperAns?2*p.den-2:p.den-1,p.ans);
+  setFeedback('분모는 바뀌지 않아요! 조각을 모두 세어 봐도 돼요.');
+}
+function renderSub(){
+  const p=problem;
+  pizzaMain.appendChild(pizzaSVG(p.den,mkState(p.den,p.a1,p.a2),{r:118,w:240}).svg);
+  $('qText').innerHTML='😋 표시 조각은 손님이 먹은 거예요! 남은 토핑 조각으로 분자를 골라요.';
+  eqRow.innerHTML=`${fracHTML(p.a1,p.den)} <span>−</span> ${fracHTML(p.a2,p.den)} <span>=</span>
+    <span class="frac big" style="color:var(--accent2)"><span class="fnum">?</span><span class="fden">${p.den}</span></span>`;
+  chips(p.den,p.ans);
+  setFeedback('남은 토핑 조각 수를 세어 보세요!');
+}
+function renderImproper(){
+  const p=problem;
+  const row=document.createElement('div');
+  row.className='pizza-row';
+  const l=document.createElement('div');
+  l.appendChild(pizzaSVG(p.den,mkState(p.den,p.den),{r:82,w:160}).svg);
+  const ll=document.createElement('div'); ll.className='pz-label'; ll.textContent='한 판 (통째로)';
+  l.appendChild(ll);
+  const r2=document.createElement('div');
+  r2.appendChild(pizzaSVG(p.den,mkState(p.den,p.rem),{r:82,w:160}).svg);
+  const rl=document.createElement('div'); rl.className='pz-label'; rl.textContent=`남은 조각 ${p.rem}개`;
+  r2.appendChild(rl);
+  row.appendChild(l); row.appendChild(r2);
+  pizzaMain.appendChild(row);
+  $('qText').innerHTML=`한 판은 ${p.den}조각! ${p.num}조각이면 몇 판 몇 조각일까요?`;
+  eqRow.innerHTML=`<span class="frac big" style="color:var(--accent2)">${fracHTML(p.num,p.den)}</span> <span>=</span> <span style="font-size:26px">?</span>`;
+  const opts=shuffle([
+    {html:mixedHTML(1,p.rem,p.den), ok:true},
+    {html:mixedHTML(1,p.num,p.den), ok:false},
+    {html:mixedHTML(2,p.rem,p.den), ok:false},
+  ]);
+  answerUI.innerHTML=''; answerEls=[];
+  opts.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.innerHTML=o.html;
+    b.addEventListener('click',()=>{ if(busy)return; o.ok?correct():wrong(); });
+    answerUI.appendChild(b);
+    answerEls.push({el:b,ok:o.ok});
+  });
+  setFeedback('대분수로 바꾼 것을 골라요!');
+}
+
+/* ====== 시작 ====== */
+updateMoney();
+setupProblem();
+</script>
+</body>
+</html>
