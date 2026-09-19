@@ -218,7 +218,8 @@ function genProblem(d){
          : d===3?['compare','read']
          : d===4?['add','make']
          : d===5?['sub','add']
-         : ['improper','add','sub','compare'];
+         : d===6?['improper','add','sub','compare']
+         : ['improper','add','sub','compare','diffadd'];
   const t=T[ri(0,T.length-1)];
   if(t==='make'||t==='read'){
     const den=pick(d===1?[2,3,4] : d===2?[4,5,6,8] : [3,4,5,6,8,10]);
@@ -247,6 +248,17 @@ function genProblem(d){
     const a1=ri(2,den-1), a2=ri(1,a1-1);
     return {type:'sub',a1,a2,den,ans:a1-a2,
       hint:`분모는 그대로! 분자끼리만 빼요: ${a1}−${a2}=${a1-a2}`};
+  }
+  if(t==='diffadd'){
+    const pairs=[[2,4],[3,6],[4,8],[5,10],[2,6],[2,8],[3,12]];
+    const [den1,den2]=pick(pairs);
+    const k=den2/den1;
+    const a1=ri(1,den1-1);
+    const conv=a1*k;
+    const a2=ri(1,den2-1);
+    const ans=conv+a2;
+    return {type:'diffadd',a1,den1,a2,den2,conv,ans,
+      hint:`${den1}분의를 ${den2}분의로 자르면! ${a1}/${den1} = ${conv}/${den2} (조각을 ${k}배 잘게) → ${conv}+${a2} = ${ans} → ${ans}/${den2}`};
   }
   const den=ri(2,8);
   const rem=ri(1,den-1);
@@ -323,7 +335,7 @@ function mkState(den,topped,eaten){
 
 /* ====== 상태 ====== */
 const ALL_CUSTS=['🐱','🐶','🦊','🐻','🐼','🐰','🐯','🦁','🐨','🐵','🐸','🐹'];
-const TYPE_LABEL={make:'분수 만들기',read:'분수 읽기',compare:'크기 비교',add:'분수의 덧셈',sub:'분수의 뺄셈',improper:'가분수와 대분수'};
+const TYPE_LABEL={make:'분수 만들기',read:'분수 읽기',compare:'크기 비교',add:'분수의 덧셈',sub:'분수의 뺄셈',improper:'가분수와 대분수',diffadd:'통분해서 더하기'};
 const CUST_PER_DAY=5;
 let day=1, custIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
 let todayMoney=0, totalMoney=parseInt(localStorage.getItem('pizzaMoney')||'0',10)||0;
@@ -359,6 +371,7 @@ function bubbleText(p){
     case 'add': return `내가 ${fracHTML(p.a1,p.den)} 판 먹고, 동생이 ${fracHTML(p.a2,p.den)} 판 먹었어요. 다 합하면 얼마일까요?`;
     case 'sub': return `${fracHTML(p.a1,p.den)} 판을 시켰는데 ${fracHTML(p.a2,p.den)} 판을 먹어치웠어요. 얼마나 남았을까요?`;
     case 'improper': return `가분수 <b>${fracHTML(p.num,p.den)}</b> 를 '몇 판 몇 조각'(대분수)으로 바꿔 주세요!`;
+    case 'diffadd': return `조각 크기가 다른 피자 둘! ${fracHTML(p.a1,p.den1)} 판과 ${fracHTML(p.a2,p.den2)} 판… 어떻게 더하면 좋을까요?`;
   }
 }
 function setupProblem(){
@@ -370,7 +383,7 @@ function setupProblem(){
   $('qType').textContent=TYPE_LABEL[problem.type];
   updateDots(); updateStreak();
   ({make:renderMake,read:renderRead,compare:renderCompare,
-    add:renderAdd,sub:renderSub,improper:renderImproper})[problem.type]();
+    add:renderAdd,sub:renderSub,improper:renderImproper,diffadd:renderDiffadd})[problem.type]();
 }
 function nextCustomer(){
   custIdx++;
@@ -538,6 +551,41 @@ function renderSub(){
     <span class="frac big" style="color:var(--accent2)"><span class="fnum">?</span><span class="fden">${p.den}</span></span>`;
   chips(p.den,p.ans);
   setFeedback('남은 토핑 조각 수를 세어 보세요!');
+}
+function renderDiffadd(){
+  const p=problem;
+  const row=document.createElement('div');
+  row.className='pizza-row';
+  const left=document.createElement('div');
+  left.appendChild(pizzaSVG(p.den1,mkState(p.den1,p.a1),{r:82,w:165}).svg);
+  const ll=document.createElement('div'); ll.className='pz-label'; ll.textContent=`${p.a1}/${p.den1} 판`;
+  left.appendChild(ll);
+  const right=document.createElement('div');
+  right.appendChild(pizzaSVG(p.den2,mkState(p.den2,p.a2),{r:82,w:165}).svg);
+  const rl=document.createElement('div'); rl.className='pz-label'; rl.textContent=`${p.a2}/${p.den2} 판`;
+  right.appendChild(rl);
+  row.appendChild(left); row.appendChild(right);
+  pizzaMain.appendChild(row);
+  $('qText').innerHTML=`조각 크기가 달라서 바로 더할 수 없어요! <b>✂️ 통분하기</b>를 눌러 조각을 똑같이 잘라 보세요.`;
+  const eqFrac=q=>`<span class="frac big" style="color:var(--accent2)"><span class="fnum">?</span><span class="fden">${p.den2}</span></span>`;
+  eqRow.innerHTML=`${fracHTML(p.a1,p.den1)} <span>+</span> ${fracHTML(p.a2,p.den2)} <span>=</span> <span style="font-size:26px">?</span>`;
+  const cut=document.createElement('button');
+  cut.className='choice big';
+  cut.textContent='✂️ 통분하기';
+  cut.addEventListener('click',()=>{
+    if(busy)return;
+    left.innerHTML='';
+    left.appendChild(pizzaSVG(p.den2,mkState(p.den2,p.conv),{r:82,w:165}).svg);
+    const ll2=document.createElement('div'); ll2.className='pz-label'; ll2.textContent=`${p.conv}/${p.den2} 판`;
+    left.appendChild(ll2);
+    eqRow.innerHTML=`${fracHTML(p.conv,p.den2)} <span>+</span> ${fracHTML(p.a2,p.den2)} <span>=</span> ${eqFrac()}`;
+    cut.remove();
+    setFeedback(`조각이 똑같아졌어요! ${p.a1}/${p.den1} = ${p.conv}/${p.den2} → 이제 분자끼리 더해요.`,'good');
+    tone(880,0,.12); tone(1100,.1,.15);
+  });
+  liveFrac.appendChild(cut);
+  chips(2*p.den2-2,p.ans);
+  setFeedback('먼저 통분해서 조각 크기를 똑같이 만들어요! (안 눌러도 정답은 입력할 수 있어요)');
 }
 function renderImproper(){
   const p=problem;
