@@ -87,24 +87,24 @@
   .tag{background:#EDF2FA; border-radius:999px; padding:4px 14px; font-size:13.5px; color:#3B6BB5; font-family:'Jua',sans-serif;}
   .streak{font-family:'Jua',sans-serif; font-size:16px; color:var(--accent2); min-height:24px;}
   .problem{font-family:'Jua',sans-serif; font-size:clamp(30px,7vw,46px); text-align:center; margin:2px 0 12px; letter-spacing:2px;}
-  .answer-row{text-align:center; margin-bottom:6px;}
+  .answer-row{display:flex; justify-content:center; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;}
   .answer-box{
-    display:inline-flex; align-items:center; justify-content:center; min-width:130px; height:64px;
+    width:min(300px,64vw); height:64px; text-align:center;
     border:3px solid var(--line); border-radius:14px; background:#FBFDFF;
-    font-family:'Jua',sans-serif; font-size:36px; color:var(--accent2); padding:0 18px;
+    font-family:'Jua',sans-serif; font-size:36px; color:var(--accent2);
+    outline:none; caret-color:var(--accent2);
   }
+  .answer-box:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,159,28,.18);}
+  .answer-box::placeholder{color:#C9BFA8; opacity:1;}
+  .btn-submit{
+    font-family:'Jua',sans-serif; font-size:20px; border:none; border-radius:14px; cursor:pointer;
+    background:var(--accent); color:#fff; padding:17px 26px; box-shadow:0 4px 0 #C77400; transition:.12s;
+    touch-action:manipulation; user-select:none;
+  }
+  .btn-submit:active{transform:translateY(3px); box-shadow:0 1px 0 #C77400;}
   .feedback{text-align:center; font-size:15px; min-height:28px; margin:4px 0 14px; color:var(--sub);}
   .feedback.good{color:var(--good); font-weight:bold;}
   .feedback.bad{color:var(--bad);}
-  .keypad{display:grid; grid-template-columns:repeat(3,86px); gap:10px; justify-content:center;}
-  .keypad button{
-    font-family:'Jua',sans-serif; font-size:22px; padding:13px 0; border:none; border-radius:14px; cursor:pointer;
-    background:#FFF3DC; color:#7A5B12; box-shadow:0 3px 0 #E8CFA0; transition:.1s;
-    touch-action:manipulation; user-select:none;
-  }
-  .keypad button:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
-  .keypad button.del{background:#EDF2FA; color:#5A6B85; box-shadow:0 3px 0 #C9D6E8;}
-  .keypad button.ok{background:var(--accent); color:#fff; box-shadow:0 3px 0 #C77400;}
   @keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);}}
   .shake{animation:shake .32s;}
   footer{max-width:840px; margin:6px auto 0; text-align:center; color:var(--sub); font-size:13px;}
@@ -145,9 +145,11 @@
       <span class="streak" id="streak"></span>
     </div>
     <div class="problem" id="problem"></div>
-    <div class="answer-row"><div class="answer-box" id="answerBox">?</div></div>
+    <div class="answer-row">
+      <input class="answer-box" id="answerBox" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="?" aria-label="정답 입력" />
+      <button class="btn-submit" id="btnSubmit">✓ 확인</button>
+    </div>
     <div class="feedback" id="feedback"></div>
-    <div class="keypad" id="keypad"></div>
   </section>
 
   <footer>물건에 둘러싸인 점선이 다음에 치울 물건이에요! 문제를 맞히면 방이 깨끗해져요 (3~4학년 수준)</footer>
@@ -199,7 +201,7 @@ let messy=[];
 let cleanedCount=0;
 let roomHue=0;
 let totalClean=parseInt(localStorage.getItem('cleanTotal')||'0',10)||0;
-let problem=null, input='', attempts=0, streak=0, bestStreak=0, busy=false;
+let problem=null, attempts=0, streak=0, bestStreak=0, busy=false;
 
 const roomEl=$('room'), roomBgEl=$('roomBg'), binEl=$('bin'), feedbackEl=$('feedback'),
       answerEl=$('answerBox'), problemEl=$('problem'), streakEl=$('streak');
@@ -302,28 +304,24 @@ function genProblem(r){
 /* ====== 문제 흐름 ====== */
 function nextProblem(){
   problem=genProblem(roomNum);
-  input=''; attempts=0;
+  attempts=0;
   problemEl.textContent=problem.text+' =';
   $('qType').textContent=problem.type;
-  answerEl.textContent='?';
-  setFeedback('정답을 입력하고 ✓를 눌러요!');
+  answerEl.value='';
+  setFeedback('정답을 적고 ✓ 확인을 눌러요!');
+  focusAnswer();
+}
+function focusAnswer(){
+  if(window.matchMedia('(pointer:fine)').matches) answerEl.focus();
 }
 function setFeedback(t,cls){feedbackEl.textContent=t; feedbackEl.className='feedback'+(cls?' '+cls:'');}
-function renderInput(){answerEl.textContent=input===''?'?':input;}
 function shake(el){el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');}
 
-function pressKey(k){
-  if(busy)return;
-  if(k==='del'){input=input.slice(0,-1); renderInput(); return;}
-  if(k==='ok'){submit(); return;}
-  if(/^\d$/.test(k)){
-    if(input.length>=6)return;
-    input+=k; renderInput();
-  }
-}
 function submit(){
-  if(input===''){shake(answerEl); setFeedback('숫자를 눌러 정답을 적어요!'); return;}
-  if(Number(input)===problem.answer)onCorrect();
+  if(busy)return;
+  const v=answerEl.value;
+  if(v===''){shake(answerEl); setFeedback('정답을 먼저 적어요!'); return;}
+  if(Number(v)===problem.answer)onCorrect();
   else onWrong();
 }
 
@@ -346,7 +344,7 @@ function onCorrect(){
 function onWrong(){
   streak=0; streakEl.textContent='';
   attempts++; sfx.no(); shake(answerEl);
-  input=''; renderInput();
+  answerEl.value='';
   if(attempts===1){
     setFeedback('앗, 아쉬워요! 다시 한번 생각해 보세요.','bad');
   }else if(attempts===2){
@@ -422,22 +420,14 @@ $('btnNextRoom').addEventListener('click',()=>{
   setupRoom();
 });
 
-/* ====== 키패드 & 키보드 ====== */
-const KEYS=['1','2','3','4','5','6','7','8','9','del','0','ok'];
-const pad=$('keypad');
-KEYS.forEach(k=>{
-  const b=document.createElement('button');
-  b.textContent = k==='del'?'⌫':k==='ok'?'✓':k;
-  if(k==='del')b.className='del';
-  if(k==='ok')b.className='ok';
-  b.addEventListener('click',()=>pressKey(k));
-  pad.appendChild(b);
+/* ====== 입력 처리 ====== */
+answerEl.addEventListener('input',()=>{
+  answerEl.value=answerEl.value.replace(/\D/g,'').slice(0,6);
 });
-window.addEventListener('keydown',e=>{
-  if(e.key>='0'&&e.key<='9')pressKey(e.key);
-  else if(e.key==='Backspace')pressKey('del');
-  else if(e.key==='Enter')pressKey('ok');
+answerEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault(); submit();}
 });
+$('btnSubmit').addEventListener('click',submit);
 
 /* ====== 시작 ====== */
 setupRoom();
