@@ -127,6 +127,29 @@
     background:var(--accent); color:#fff; padding:12px 26px; box-shadow:0 4px 0 #C77400; transition:.12s;
   }
   .done-box button:active{transform:translateY(3px); box-shadow:0 1px 0 #C77400;}
+  .btn-level{
+    font-family:'Jua',sans-serif; font-size:14px; border:none; border-radius:12px; cursor:pointer;
+    background:#FFF3DC; color:#B25E00; padding:8px 14px; box-shadow:0 3px 0 #E8CFA0; transition:.12s;
+  }
+  .btn-level:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
+  .level-overlay{
+    position:absolute; inset:0; z-index:11; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.85); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .4s;
+  }
+  .level-overlay.show{opacity:1; pointer-events:auto;}
+  .level-box{text-align:center; padding:16px;}
+  .level-box h3{font-family:'Jua',sans-serif; font-size:20px; color:var(--accent2); margin-bottom:4px;}
+  .level-sub{font-size:13px; color:var(--sub); margin-bottom:12px;}
+  .level-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .level-btns button{
+    font-family:'Jua',sans-serif; font-size:18px; border:none; border-radius:14px; cursor:pointer;
+    background:#FFF3DC; color:#7A5B12; box-shadow:0 3px 0 #E8CFA0; padding:14px 16px;
+    transition:.12s; line-height:1.5; display:flex; flex-direction:column; gap:4px; align-items:center;
+  }
+  .level-btns button small{font-size:11.5px; font-family:'Gowun Dodum'; color:#9A8558; font-weight:normal;}
+  .level-btns button:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
+  .level-close{margin-top:12px; border:none; background:none; font-family:'Jua',sans-serif; font-size:14px; color:var(--sub); cursor:pointer; text-decoration:underline;}
   .shop-card{position:relative;}
   footer{max-width:840px; margin:6px auto 0; text-align:center; color:var(--sub); font-size:13px;}
 </style>
@@ -136,6 +159,7 @@
   <header>
     <a href="index.html" class="btn-menu">← 메뉴</a>
     <h1>🍕 분수 피자 가게</h1>
+    <button id="btnLevel" class="btn-level">📚 난이도</button>
     <span class="money" id="moneyEl"></span>
   </header>
 
@@ -161,6 +185,18 @@
         <button id="btnNextDay">내일도 가게 열기 🍕</button>
       </div>
     </div>
+    <div class="level-overlay" id="levelOverlay">
+      <div class="level-box">
+        <h3>📚 몇 학년 주문으로 시작할까요?</h3>
+        <p class="level-sub">학년에 맞는 영업일부터 시작해요! 손님을 맞을 때마다 조금씩 어려워져요.</p>
+        <div class="level-btns">
+          <button data-lv="3">🌱 3학년<small>분수 개념! 만들기·읽기·비교</small></button>
+          <button data-lv="4">🌿 4학년<small>분수 덧셈·뺄셈, 가분수와 대분수</small></button>
+          <button data-lv="5">🌳 5학년<small>통분! 분모가 다른 분수 덧셈</small></button>
+        </div>
+        <button class="level-close" id="btnLevelClose" hidden>이어서 하기</button>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -174,7 +210,7 @@
     <div class="feedback" id="feedback"></div>
   </section>
 
-  <footer>영업일이 지날수록 주문이 어려워져요! (초등 3~4학년 분수 단원)</footer>
+  <footer>영업일이 지날수록 주문이 어려워져요! (초등 3~5학년 분수 단원)</footer>
 </div>
 <script>
 "use strict";
@@ -358,7 +394,9 @@ function mkState(den,topped,eaten){
 const ALL_CUSTS=['🐱','🐶','🦊','🐻','🐼','🐰','🐯','🦁','🐨','🐵','🐸','🐹'];
 const TYPE_LABEL={make:'분수 만들기',read:'분수 읽기',compare:'크기 비교',add:'분수의 덧셈',sub:'분수의 뺄셈',improper:'가분수와 대분수',diffadd:'통분해서 더하기'};
 const CUST_PER_DAY=5;
-let day=1, custIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
+const LEVEL_DAY={3:1,4:4,5:7};
+let curLevel=parseInt(localStorage.getItem('pizzaLevel')||'0',10)||0;
+let day=curLevel?LEVEL_DAY[curLevel]:1, custIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
 let todayMoney=0, totalMoney=parseInt(localStorage.getItem('pizzaMoney')||'0',10)||0;
 let problem=null, curPizza=null, CUSTS=shuffle(ALL_CUSTS);
 let answerEls=[];
@@ -468,6 +506,31 @@ $('btnNextDay').addEventListener('click',()=>{
   busy=false;
   setupProblem();
 });
+
+/* ====== 난이도 선택 ====== */
+function showLevelPicker(){
+  $('btnLevelClose').hidden=!curLevel;
+  $('levelOverlay').classList.add('show');
+  busy=true;
+}
+function pickLevel(lv){
+  localStorage.setItem('pizzaLevel',String(lv));
+  curLevel=lv;
+  day=LEVEL_DAY[lv];
+  custIdx=0; todayMoney=0; bestStreak=0;
+  CUSTS=shuffle(ALL_CUSTS);
+  $('levelOverlay').classList.remove('show');
+  $('dayOverlay').classList.remove('show');
+  busy=false;
+  setupProblem();
+  setFeedback(`${lv}학년 주문으로 시작! 손님을 맞을 때마다 조금씩 어려워져요.`);
+}
+document.querySelectorAll('#levelOverlay [data-lv]').forEach(b=>b.addEventListener('click',()=>pickLevel(+b.dataset.lv)));
+$('btnLevelClose').addEventListener('click',()=>{
+  $('levelOverlay').classList.remove('show');
+  busy=$('dayOverlay').classList.contains('show');
+});
+$('btnLevel').addEventListener('click',showLevelPicker);
 
 /* ====== 유형별 화면 ====== */
 function liveUpdate(state,den){
@@ -643,6 +706,7 @@ function renderImproper(){
 /* ====== 시작 ====== */
 updateMoney();
 setupProblem();
+if(!curLevel) showLevelPicker();
 </script>
 </body>
 </html>
