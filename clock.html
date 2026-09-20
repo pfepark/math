@@ -139,6 +139,28 @@
   .level-btns button small{font-size:11.5px; font-family:'Gowun Dodum'; color:#5F9C7F; font-weight:normal;}
   .level-btns button:active{transform:translateY(2px); box-shadow:0 1px 0 #BCE3CE;}
   .level-close{margin-top:12px; border:none; background:none; font-family:'Jua',sans-serif; font-size:14px; color:var(--sub); cursor:pointer; text-decoration:underline;}
+  .shop-overlay{
+    position:absolute; inset:0; z-index:12; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.9); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .4s;
+  }
+  .shop-overlay.show{opacity:1; pointer-events:auto;}
+  .shop-box{text-align:center; padding:12px 8px; width:100%; max-height:100%; overflow-y:auto;}
+  .shop-box h3{font-family:'Jua',sans-serif; font-size:20px; color:var(--accent2); margin-bottom:2px;}
+  .shop-stars{font-size:16px; color:#B25E00;}
+  .shop-sec{font-family:'Jua',sans-serif; font-size:15px; color:var(--sub); margin:10px 0 6px; text-align:left; padding-left:8px;}
+  .shop-list{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .shop-item{
+    border:2px solid var(--line); border-radius:14px; padding:8px 10px; background:#fff;
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px;
+    min-width:84px; transition:.12s;
+  }
+  .shop-item:hover{transform:translateY(-2px);}
+  .shop-item.on{border-color:var(--accent); box-shadow:0 0 0 3px rgba(16,185,129,.2);}
+  .shop-item.locked{opacity:.5; cursor:default;}
+  .shop-item .nm{font-size:12.5px; font-family:'Jua',sans-serif; color:var(--ink);}
+  .shop-item .st{font-size:11px; color:var(--sub);}
+  .shop-item .fe{font-size:34px; line-height:1;}
   footer{max-width:840px; margin:6px auto 0; text-align:center; color:var(--sub); font-size:13px;}
 </style>
 </head>
@@ -148,6 +170,7 @@
     <a href="index.html" class="btn-menu">← 메뉴</a>
     <h1>⏰ 시계 마을</h1>
     <button id="btnLevel" class="btn-level">📚 난이도</button>
+    <button id="btnShop" class="btn-level">⭐ 상점</button>
     <span class="stars" id="starsEl"></span>
   </header>
 
@@ -182,6 +205,17 @@
         <button class="level-close" id="btnLevelClose" hidden>이어서 하기</button>
       </div>
     </div>
+    <div class="shop-overlay" id="shopOverlay">
+      <div class="shop-box">
+        <h3>🎁 별 상점 <span class="shop-stars">⭐ <span id="shopStars"></span>개</span></h3>
+        <p class="level-sub">별을 모으면 자동으로 해금돼요! 별은 없어지지 않아요.</p>
+        <div class="shop-sec">⏰ 시계 스킨 (눌러서 바꿔요)</div>
+        <div class="shop-list" id="skinList"></div>
+        <div class="shop-sec">🐾 마을 친구</div>
+        <div class="shop-list" id="friendList"></div>
+        <button class="level-close" id="btnShopClose">닫기</button>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -194,7 +228,7 @@
     <div class="feedback" id="feedback"></div>
   </section>
 
-  <footer>판이 지날수록 어려워져요! 시계 읽기 → 경과 시각 계산 → 단위 변환·각도 (초등 2~4학년)</footer>
+  <footer>⭐를 모으면 상점에서 시계 스킨과 마을 친구가 해금돼요! 판이 지날수록 어려워져요 (초등 2~4학년)</footer>
 </div>
 <script>
 "use strict";
@@ -334,50 +368,73 @@ function uniqueProblem(r){
 
 /* ====== 시계 SVG ====== */
 function mk(t,attrs){const e=document.createElementNS(NS,t);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
-function clockSVG(h,m,w){
+function clockSVG(h,m,w,skinOverride){
+  const sk=skinOverride||SKINS[skinIdx]||SKINS[0];
   const c=w/2, R=c-6;
   const svg=mk('svg',{viewBox:`0 0 ${w} ${w}`});
   svg.classList.add('clock');
   svg.style.width=w+'px';
-  svg.appendChild(mk('circle',{cx:c,cy:c,r:R,fill:'#FFFDF6',stroke:'#C8B8A0','stroke-width':5}));
+  svg.appendChild(mk('circle',{cx:c,cy:c,r:R,fill:sk.face,stroke:sk.rim,'stroke-width':5}));
   for(let i=0;i<60;i++){
-    const a=(i*6-90)*Math.PI/180, major=i%5===0, len=major?w*0.055:w*0.032;
+    const major=i%5===0;
+    if(!major&&w<90)continue;
+    const a=(i*6-90)*Math.PI/180, len=major?w*0.055:w*0.032;
     svg.appendChild(mk('line',{
       x1:c+(R-len)*Math.cos(a), y1:c+(R-len)*Math.sin(a),
       x2:c+R*Math.cos(a), y2:c+R*Math.sin(a),
-      stroke:major?'#8A7A5F':'#B0A184', 'stroke-width':major?3:2}));
+      stroke:major?sk.tick:sk.minor, 'stroke-width':major?3:2}));
   }
-  for(let n=1;n<=12;n++){
-    const a=(n*30-90)*Math.PI/180;
-    const t=mk('text',{
-      x:c+(R-w*0.11)*Math.cos(a), y:c+(R-w*0.11)*Math.sin(a)+w*0.028,
-      'text-anchor':'middle','font-size':w*0.085,'font-family':"'Jua',sans-serif",fill:'#6B5D45'});
-    t.textContent=n;
-    svg.appendChild(t);
+  if(w>=90){
+    for(let n=1;n<=12;n++){
+      const a=(n*30-90)*Math.PI/180;
+      const t=mk('text',{
+        x:c+(R-w*0.11)*Math.cos(a), y:c+(R-w*0.11)*Math.sin(a)+w*0.028,
+        'text-anchor':'middle','font-size':w*0.085,'font-family':"'Jua',sans-serif",fill:sk.num});
+      t.textContent=n;
+      svg.appendChild(t);
+    }
   }
   const ha=((h%12)*30+m*0.5-90)*Math.PI/180;
   svg.appendChild(mk('line',{
     x1:c-w*0.03*Math.cos(ha), y1:c-w*0.03*Math.sin(ha),
     x2:c+R*0.48*Math.cos(ha), y2:c+R*0.48*Math.sin(ha),
-    stroke:'#E8590C','stroke-width':w*0.035,'stroke-linecap':'round'}));
+    stroke:sk.hour,'stroke-width':w*0.035,'stroke-linecap':'round'}));
   const ma=(m*6-90)*Math.PI/180;
   svg.appendChild(mk('line',{
     x1:c-w*0.04*Math.cos(ma), y1:c-w*0.04*Math.sin(ma),
     x2:c+R*0.72*Math.cos(ma), y2:c+R*0.72*Math.sin(ma),
-    stroke:'#1971C2','stroke-width':w*0.022,'stroke-linecap':'round'}));
+    stroke:sk.min,'stroke-width':w*0.022,'stroke-linecap':'round'}));
   svg.appendChild(mk('circle',{cx:c,cy:c,r:w*0.028,fill:'#3B3A36'}));
   return svg;
 }
 
 /* ====== 상태 ====== */
 const ASKERS=['🐱','🐶','🦊','🐻','🐼','🐰','🐯','🦁','🐨','🐵'];
+const FRIENDS=[
+  {e:'🐧',name:'펭귄',need:50},
+  {e:'🦉',name:'올빼미',need:120},
+  {e:'🐷',name:'아기 돼지',need:200},
+  {e:'🦄',name:'유니콘',need:300},
+  {e:'🐲',name:'용',need:450},
+  {e:'👽',name:'외계인',need:600},
+];
+const SKINS=[
+  {name:'기본 시계',need:0,face:'#FFFDF6',rim:'#C8B8A0',tick:'#8A7A5F',minor:'#B0A184',num:'#6B5D45',hour:'#E8590C',min:'#1971C2'},
+  {name:'골드 시계',need:80,face:'#FFF8E1',rim:'#D4A017',tick:'#8A6D1A',minor:'#C4A748',num:'#7A5E12',hour:'#B8860B',min:'#4A3B0A'},
+  {name:'바다 시계',need:150,face:'#F0F8FF',rim:'#5B9BD5',tick:'#2C5F8A',minor:'#8FB8D8',num:'#1F4E79',hour:'#0E7CD8',min:'#083A66'},
+  {name:'딸기 시계',need:250,face:'#FFF0F5',rim:'#E75480',tick:'#B03060',minor:'#D893AE',num:'#8E2253',hour:'#E75480',min:'#7A1F45'},
+];
+function currentAskers(){
+  return ASKERS.concat(FRIENDS.filter(f=>f.need<=totalStars).map(f=>f.e));
+}
 const TYPE_LABEL={read:'시계 읽기',match:'시계 찾기',after:'시간의 덧셈',ago:'시간의 뺄셈',unit:'시간 단위 바꾸기',angle:'시계 각도'};
 const Q_PER_ROUND=5;
 let startRound=parseInt(localStorage.getItem('clockLevel')||'0',10)||0;
 let round=startRound?startRound:1;
 let qIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
 let todayStars=0, totalStars=parseInt(localStorage.getItem('clockStars')||'0',10)||0;
-let problem=null, ASKER_SET=shuffle(ASKERS), answerEls=[];
+let skinIdx=parseInt(localStorage.getItem('clockSkin')||'0',10)||0;
+let problem=null, ASKER_SET=shuffle(currentAskers()), answerEls=[];
 
 const clockZone=$('clockZone'), bubble=$('bubble'), answerUI=$('answerUI'),
       feedbackEl=$('feedback'), askerEl=$('asker'), askerEmoji=$('askerEmoji'), streakEl=$('streak');
@@ -414,6 +471,9 @@ function setupProblem(){
   bubble.innerHTML=bubbleText(problem);
   $('qType').textContent=TYPE_LABEL[problem.type];
   updateDots(); updateStreak();
+  paintCurrent();
+}
+function paintCurrent(){
   ({read:renderRead,match:renderMatch,after:renderShift,ago:renderShift,
     unit:renderUnit,angle:renderAngle})[problem.type]();
 }
@@ -426,13 +486,23 @@ function nextQuestion(){
 function correct(){
   busy=true;
   const earn=attempts===0?2:1;
+  const prev=totalStars;
   todayStars+=earn; totalStars+=earn;
   localStorage.setItem('clockStars',String(totalStars));
   streak++; bestStreak=Math.max(bestStreak,streak);
   updateStreak(); updateStars();
   sfx.ok();
   askerEl.classList.add('happy');
-  setFeedback(`🎉 정답! 별 ${earn}개를 받았어요!`,'good');
+  const newSkins=SKINS.filter(s=>s.need>prev&&s.need<=totalStars);
+  const newFriends=FRIENDS.filter(f=>f.need>prev&&f.need<=totalStars);
+  if(newSkins.length||newFriends.length){
+    const names=[...newSkins.map(s=>`⏰ ${s.name}`),...newFriends.map(f=>`${f.e} ${f.name}`)].join(', ');
+    ASKER_SET=shuffle(currentAskers());
+    sfx.win();
+    setFeedback(`🎉 해금! ${names}! (⭐ 상점에서 확인해 보세요)`,'good');
+  }else{
+    setFeedback(`🎉 정답! 별 ${earn}개를 받았어요!`,'good');
+  }
   setTimeout(nextQuestion,1100);
 }
 function wrong(){
@@ -458,7 +528,7 @@ function roundEnd(){
 $('btnNextRound').addEventListener('click',()=>{
   $('roundOverlay').classList.remove('show');
   round++; qIdx=0; todayStars=0; bestStreak=0;
-  ASKER_SET=shuffle(ASKERS);
+  ASKER_SET=shuffle(currentAskers());
   busy=false;
   setupProblem();
 });
@@ -474,7 +544,7 @@ function pickLevel(rv){
   startRound=rv;
   round=rv;
   qIdx=0; todayStars=0; bestStreak=0;
-  ASKER_SET=shuffle(ASKERS);
+  ASKER_SET=shuffle(currentAskers());
   $('levelOverlay').classList.remove('show');
   $('roundOverlay').classList.remove('show');
   busy=false;
@@ -487,6 +557,55 @@ $('btnLevelClose').addEventListener('click',()=>{
   busy=$('roundOverlay').classList.contains('show');
 });
 $('btnLevel').addEventListener('click',showLevelPicker);
+
+/* ====== 별 상점 ====== */
+function openShop(){
+  $('shopStars').textContent=totalStars.toLocaleString('ko-KR');
+  renderSkinList(); renderFriendList();
+  $('shopOverlay').classList.add('show');
+  busy=true;
+}
+function closeShop(){
+  $('shopOverlay').classList.remove('show');
+  busy=$('roundOverlay').classList.contains('show')||$('levelOverlay').classList.contains('show');
+}
+function renderSkinList(){
+  const el=$('skinList'); el.innerHTML='';
+  SKINS.forEach((s,i)=>{
+    const unlocked=totalStars>=s.need;
+    const d=document.createElement('div');
+    d.className='shop-item'+(i===skinIdx?' on':'')+(unlocked?'':' locked');
+    d.appendChild(clockSVG(3,20,64,s));
+    const nm=document.createElement('div'); nm.className='nm'; nm.textContent=s.name;
+    const st=document.createElement('div'); st.className='st';
+    st.textContent=i===skinIdx?'사용 중!':unlocked?'눌러서 선택':`🔒 ⭐${s.need}개 필요`;
+    d.appendChild(nm); d.appendChild(st);
+    if(unlocked)d.addEventListener('click',()=>{
+      skinIdx=i;
+      localStorage.setItem('clockSkin',String(i));
+      renderSkinList();
+      paintCurrent();
+      tone(880,0,.1);
+    });
+    el.appendChild(d);
+  });
+}
+function renderFriendList(){
+  const el=$('friendList'); el.innerHTML='';
+  FRIENDS.forEach(f=>{
+    const unlocked=totalStars>=f.need;
+    const d=document.createElement('div');
+    d.className='shop-item'+(unlocked?'':' locked');
+    const fe=document.createElement('div'); fe.className='fe'; fe.textContent=f.e;
+    const nm=document.createElement('div'); nm.className='nm'; nm.textContent=f.name;
+    const st=document.createElement('div'); st.className='st';
+    st.textContent=unlocked?'마을에 살아요!':`🔒 ⭐${f.need}개 필요`;
+    d.appendChild(fe); d.appendChild(nm); d.appendChild(st);
+    el.appendChild(d);
+  });
+}
+$('btnShop').addEventListener('click',openShop);
+$('btnShopClose').addEventListener('click',closeShop);
 
 /* ====== 유형별 화면 ====== */
 function buildChoices(choices){
