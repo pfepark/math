@@ -341,11 +341,11 @@ function clockSVG(h,m,w){
   svg.style.width=w+'px';
   svg.appendChild(mk('circle',{cx:c,cy:c,r:R,fill:'#FFFDF6',stroke:'#C8B8A0','stroke-width':5}));
   for(let i=0;i<60;i++){
-    const a=(i*6-90)*Math.PI/180, major=i%5===0, len=major?w*0.045:w*0.02;
+    const a=(i*6-90)*Math.PI/180, major=i%5===0, len=major?w*0.055:w*0.032;
     svg.appendChild(mk('line',{
       x1:c+(R-len)*Math.cos(a), y1:c+(R-len)*Math.sin(a),
       x2:c+R*Math.cos(a), y2:c+R*Math.sin(a),
-      stroke:major?'#8A7A5F':'#D8CCAE', 'stroke-width':major?2.5:1.2}));
+      stroke:major?'#8A7A5F':'#B0A184', 'stroke-width':major?3:2}));
   }
   for(let n=1;n<=12;n++){
     const a=(n*30-90)*Math.PI/180;
