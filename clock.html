@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시계 마을 - 초등 수학 놀이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F2FBF6; --card:#FFFFFF; --ink:#3B3A36; --sub:#7A756B;
+    --accent:#10B981; --accent2:#0E9F6E; --line:#DCEDE2;
+    --good:#0E7C4A; --bad:#C0392B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(16,185,129,.10), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(255,159,28,.08), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Gowun Dodum','맑은 고딕',sans-serif;
+    min-height:100vh; padding:18px 24px 34px;
+  }
+  .wrap{max-width:840px; margin:0 auto;}
+  header{display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap;}
+  header h1{font-family:'Jua',sans-serif; font-size:clamp(22px,4vw,34px); color:var(--accent2); letter-spacing:1px;}
+  header .stars{
+    margin-left:auto; font-size:14px; color:#0E6B4A; background:#fff;
+    border:1px solid var(--line); border-radius:999px; padding:5px 14px;
+    white-space:nowrap; font-family:'Jua',sans-serif;
+  }
+  a.btn-menu{
+    font-family:'Jua',sans-serif; font-size:15px; text-decoration:none; color:#3B6BB5;
+    background:#EDF2FA; border-radius:12px; padding:8px 16px; transition:.15s; display:inline-block;
+  }
+  a.btn-menu:hover{transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.12);}
+  .btn-level{
+    font-family:'Jua',sans-serif; font-size:14px; border:none; border-radius:12px; cursor:pointer;
+    background:#FFF3DC; color:#B25E00; padding:8px 14px; box-shadow:0 3px 0 #E8CFA0; transition:.12s;
+  }
+  .btn-level:active{transform:translateY(2px); box-shadow:0 1px 0 #E8CFA0;}
+  .card{
+    background:var(--card); border-radius:20px; padding:16px 18px;
+    box-shadow:0 6px 24px rgba(30,120,80,.12); margin-bottom:18px;
+  }
+  .game-card{position:relative;}
+  .round-head{display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;}
+  .round{font-family:'Jua',sans-serif; font-size:19px;}
+  .dots{display:flex; gap:7px; margin-left:auto; align-items:center;}
+  .dot{width:13px; height:13px; border-radius:50%; background:#E2EEE7;}
+  .dot.done{background:var(--accent2);}
+  .dot.cur{background:#fff; border:3px solid var(--accent2); width:15px; height:15px; animation:pulse 1.2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.25);}}
+  .asker-row{display:flex; align-items:center; gap:16px; margin:8px 0 4px;}
+  .asker{
+    width:84px; height:84px; border-radius:50%; background:#E7F8EF; border:3px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:46px; flex-shrink:0; transition:.2s;
+  }
+  .asker.happy{animation:hop .55s;}
+  @keyframes hop{0%,100%{transform:translateY(0);} 40%{transform:translateY(-12px) rotate(-8deg);} 70%{transform:translateY(0) rotate(6deg);}}
+  .bubble{
+    position:relative; background:#fff; border:2px solid var(--line); border-radius:16px;
+    padding:12px 18px; font-size:16.5px; line-height:2; flex:1; min-height:64px;
+  }
+  .bubble::before{
+    content:''; position:absolute; left:-9px; top:50%; width:14px; height:14px; background:#fff;
+    border-left:2px solid var(--line); border-bottom:2px solid var(--line);
+    transform:translateY(-50%) rotate(45deg);
+  }
+  .clock-zone{display:flex; flex-direction:column; align-items:center; padding:14px 0 8px; min-height:170px;}
+  .big-time{
+    font-family:'Jua',sans-serif; font-size:clamp(34px,7vw,52px); color:var(--accent2);
+    padding:24px 8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
+  }
+  .delta-pill{
+    font-family:'Jua',sans-serif; font-size:22px; color:#fff; background:var(--accent2);
+    border-radius:999px; padding:8px 22px; margin-top:10px; box-shadow:0 3px 0 #0B7A55;
+  }
+  .clock{display:block; height:auto; max-width:100%;}
+  .prob-head{display:flex; justify-content:space-between; align-items:center; max-width:560px; margin:0 auto 4px;}
+  .tag{background:#E7F8EF; border-radius:999px; padding:4px 14px; font-size:13.5px; color:#0E6B4A; font-family:'Jua',sans-serif;}
+  .streak{font-family:'Jua',sans-serif; font-size:16px; color:var(--accent2); min-height:24px;}
+  .q-text{text-align:center; font-size:17px; margin:8px 0 12px; line-height:1.7;}
+  .answer-ui{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:6px 0 4px; align-items:center;}
+  .choice{
+    font-family:'Jua',sans-serif; font-size:19px; border:none; border-radius:14px;
+    background:#E7F8EF; color:#0E5E45; box-shadow:0 3px 0 #BCE3CE; padding:12px 22px;
+    cursor:pointer; transition:.1s; display:inline-flex; align-items:center; gap:6px;
+    touch-action:manipulation; user-select:none;
+  }
+  .choice:active{transform:translateY(2px); box-shadow:0 1px 0 #BCE3CE;}
+  .choice.reveal{background:var(--accent); color:#fff; box-shadow:0 3px 0 #0B7A55; animation:pop .3s;}
+  @keyframes pop{from{transform:scale(.7);} to{transform:scale(1);}}
+  .clock-choice{
+    background:#fff; border:3px solid var(--line); border-radius:16px; padding:6px;
+    cursor:pointer; transition:.15s; display:inline-block;
+  }
+  .clock-choice:hover{transform:translateY(-3px); border-color:#9ADBB8;}
+  .clock-choice:active{transform:translateY(1px);}
+  .clock-choice.reveal{border-color:var(--accent); box-shadow:0 0 0 4px rgba(16,185,129,.3); animation:pop .3s;}
+  .feedback{text-align:center; font-size:15px; min-height:28px; margin:6px 0 2px; color:var(--sub);}
+  .feedback.good{color:var(--good); font-weight:bold;}
+  .feedback.bad{color:var(--bad);}
+  @keyframes shake{0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);}}
+  .shake{animation:shake .32s;}
+  .done-overlay{
+    position:absolute; inset:0; z-index:8; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.75); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .5s;
+  }
+  .done-overlay.show{opacity:1; pointer-events:auto;}
+  .done-box{text-align:center; padding:22px;}
+  .done-box .big{font-size:46px; margin-bottom:8px;}
+  .done-box h2{font-family:'Jua',sans-serif; font-size:30px; color:var(--accent2); margin-bottom:8px;}
+  .done-box p{color:var(--sub); font-size:15px;}
+  .done-box .stats{font-size:14px; margin:10px 0 18px; font-family:'Jua',sans-serif; color:#0E6B4A;}
+  .done-box button{
+    font-family:'Jua',sans-serif; font-size:17px; border:none; border-radius:14px; cursor:pointer;
+    background:var(--accent); color:#fff; padding:12px 26px; box-shadow:0 4px 0 #0B7A55; transition:.12s;
+  }
+  .done-box button:active{transform:translateY(3px); box-shadow:0 1px 0 #0B7A55;}
+  .level-overlay{
+    position:absolute; inset:0; z-index:11; display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.85); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:opacity .4s;
+  }
+  .level-overlay.show{opacity:1; pointer-events:auto;}
+  .level-box{text-align:center; padding:16px;}
+  .level-box h3{font-family:'Jua',sans-serif; font-size:20px; color:var(--accent2); margin-bottom:4px;}
+  .level-sub{font-size:13px; color:var(--sub); margin-bottom:12px;}
+  .level-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .level-btns button{
+    font-family:'Jua',sans-serif; font-size:18px; border:none; border-radius:14px; cursor:pointer;
+    background:#E7F8EF; color:#0E5E45; box-shadow:0 3px 0 #BCE3CE; padding:14px 16px;
+    transition:.12s; line-height:1.5; display:flex; flex-direction:column; gap:4px; align-items:center;
+  }
+  .level-btns button small{font-size:11.5px; font-family:'Gowun Dodum'; color:#5F9C7F; font-weight:normal;}
+  .level-btns button:active{transform:translateY(2px); box-shadow:0 1px 0 #BCE3CE;}
+  .level-close{margin-top:12px; border:none; background:none; font-family:'Jua',sans-serif; font-size:14px; color:var(--sub); cursor:pointer; text-decoration:underline;}
+  footer{max-width:840px; margin:6px auto 0; text-align:center; color:var(--sub); font-size:13px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="index.html" class="btn-menu">← 메뉴</a>
+    <h1>⏰ 시계 마을</h1>
+    <button id="btnLevel" class="btn-level">📚 난이도</button>
+    <span class="stars" id="starsEl"></span>
+  </header>
+
+  <section class="card game-card">
+    <div class="round-head">
+      <span class="round" id="roundLabel"></span>
+      <div class="dots" id="dots"></div>
+    </div>
+    <div class="asker-row">
+      <div class="asker" id="asker"><span id="askerEmoji">🐰</span></div>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="clock-zone" id="clockZone"></div>
+    <div class="done-overlay" id="roundOverlay">
+      <div class="done-box">
+        <div class="big">🎉⏰🎉</div>
+        <h2>이번 판 끝!</h2>
+        <p id="roundMsg"></p>
+        <p class="stats" id="roundStats"></p>
+        <button id="btnNextRound">다음 판 도전하기 ⏰</button>
+      </div>
+    </div>
+    <div class="level-overlay" id="levelOverlay">
+      <div class="level-box">
+        <h3>📚 몇 학년 문제로 시작할까요?</h3>
+        <p class="level-sub">학년에 맞는 판부터 시작해요! 판이 지날수록 조금씩 어려워져요.</p>
+        <div class="level-btns">
+          <button data-lv="1">🌱 2~3학년<small>시계 읽기·찾기 (5분 단위)</small></button>
+          <button data-lv="4">🌿 4학년<small>1분 단위 + 시간의 덧셈·뺄셈</small></button>
+          <button data-lv="7">🌳 4학년 심화<small>단위 변환, 시계 각도</small></button>
+        </div>
+        <button class="level-close" id="btnLevelClose" hidden>이어서 하기</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="prob-head">
+      <span class="tag" id="qType"></span>
+      <span class="streak" id="streak"></span>
+    </div>
+    <div class="q-text" id="qText"></div>
+    <div class="answer-ui" id="answerUI"></div>
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <footer>판이 지날수록 어려워져요! 시계 읽기 → 경과 시각 계산 → 단위 변환·각도 (초등 2~4학년)</footer>
+</div>
+<script>
+"use strict";
+/* ====== 유틸 & 효과음 ====== */
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[ri(0,a.length-1)];
+const shuffle=a=>{const r=a.slice();for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;};
+let AC=null;
+function tone(f,t0,dur,type='sine',vol=.07){
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,AC.currentTime+t0);
+    g.gain.exponentialRampToValueAtTime(vol,AC.currentTime+t0+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+t0+dur);
+    o.connect(g);g.connect(AC.destination);
+    o.start(AC.currentTime+t0);o.stop(AC.currentTime+t0+dur+.05);
+  }catch(e){}
+}
+const sfx={
+  ok(){tone(660,0,.12);tone(880,.1,.16);},
+  no(){tone(196,0,.22,'square',.045);},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.13,.2));}
+};
+
+/* ====== 시각 표시 & 문제 생성 ====== */
+function fmtTime(h,m){return m===0?`${h}시`:`${h}시 ${m}분`;}
+function timeOpts(h,m){
+  const list=[[h,m]];
+  const cand=[[h===1?12:h-1,m],[(h%12)+1,m],[h,(m+15)%60],[h,(m+45)%60],[(h%12)+1,(m+15)%60],[h===1?12:h-1,(m+45)%60]];
+  for(const c of cand){
+    if(list.length>=4)break;
+    if(!list.some(t=>t[0]===c[0]&&t[1]===c[1]))list.push(c);
+  }
+  return list;
+}
+function numOpts(ans,pool){
+  const list=[ans];
+  for(const c of pool){
+    if(list.length>=4)break;
+    if(c!==ans&&c>0&&!list.includes(c))list.push(c);
+  }
+  return list;
+}
+function addTime(h,m,dh,dm){
+  let total=((h*60+m)+(dh*60+dm))%720;
+  if(total<0)total+=720;
+  const rh=((Math.floor(total/60)-1)%12+12)%12+1;
+  return [rh,total%60];
+}
+function genProblem(r){
+  const T = r<=2?['read','match']
+         : r===3?['read','match','after']
+         : r===4?['read','after','ago']
+         : r<=6?['after','ago','match','read']
+         : ['unit','angle','after','ago'];
+  const t=T[ri(0,T.length-1)];
+  if(t==='read'||t==='match'){
+    const step=r<=2?5:1;
+    const h=ri(1,12);
+    const m=step===5?ri(0,11)*5:ri(0,59);
+    const raw=timeOpts(h,m);
+    const choices = t==='read'
+      ? shuffle(raw.map(([hh,mm],i)=>({t:fmtTime(hh,mm),ok:i===0})))
+      : shuffle(raw.map(([hh,mm],i)=>({hh,mm,ok:i===0})));
+    return {type:t,h,m,choices,
+      hint:t==='read'?'짧고 굵은 바늘이 시침, 길고 가는 바늘이 분침! 분침 한 눈금은 5분이에요!'
+                    :'시침이 가리키는 숫자를 먼저 보고, 분침 위치를 읽어요!'};
+  }
+  if(t==='after'||t==='ago'){
+    const h=ri(1,12);
+    const m=r<=3?ri(0,11)*5:ri(0,59);
+    let H,M;
+    if(t==='after'){
+      if(r===3){H=ri(1,5);M=0;}
+      else if(r===4){H=ri(0,2);M=ri(1,11)*5;}
+      else{H=ri(1,3);M=ri(0,11)*5;}
+    }else{
+      if(r<=4){H=0;M=ri(1,9)*5;}
+      else if(r<=6){H=ri(0,1);M=ri(1,11)*5;}
+      else{H=ri(1,2);M=ri(0,11)*5;}
+    }
+    const [rh,rm]=t==='after'?addTime(h,m,H,M):addTime(h,m,-H,-M);
+    const delta=H&&M?`${H}시간 ${M}분`:H?`${H}시간`:`${M}분`;
+    const choices=shuffle(timeOpts(rh,rm).map(([hh,mm],i)=>({t:fmtTime(hh,mm),ok:i===0})));
+    return {type:t,h,m,H,M,rh,rm,delta,choices,
+      hint:'분침은 60분에 한 바퀴! 60분이 지나면 시침이 다음 숫자로 넘어가요.'};
+  }
+  if(t==='unit'){
+    const kind=pick(['hm2m','ms2s','m2h']);
+    let a,b,ans,text,unit,pool;
+    if(kind==='hm2m'){
+      a=ri(1,3);b=ri(1,11)*5;ans=a*60+b;text=`${a}시간 ${b}분`;unit='분';
+      pool=[a*100+b,a*60,ans+15,ans-15,ans+30,ans+60];
+    }else if(kind==='ms2s'){
+      a=ri(1,4);b=ri(1,11)*5;ans=a*60+b;text=`${a}분 ${b}초`;unit='초';
+      pool=[a*100+b,a*60,ans+15,ans-15,ans+30,ans+60];
+    }else{
+      a=ri(1,5)*60;ans=a/60;text=`${a}분`;unit='시간';
+      pool=[ans*2,ans+1,ans-1,ans+3,ans+2,a/30];
+    }
+    const choices=shuffle(numOpts(ans,pool).map((v,i)=>({t:`${v} ${unit}`,ok:i===0})));
+    return {type:'unit',kind,a,b,ans,unit,choices,
+      hint:'1시간=60분, 1분=60초! 큰 단위를 작은 단위로 바꿔서 더해요.'};
+  }
+  const h=ri(1,11);
+  const raw=h*30, ans=h<=6?raw:360-raw;
+  const pool=[360-ans,raw,ans+30,ans-30,ans+60,ans+15];
+  const choices=shuffle(numOpts(ans,pool).map((v,i)=>({t:`${v}도`,ok:i===0})));
+  return {type:'angle',h,ans,choices,
+    hint:'시침은 1시간에 30도씩 움직여요! 3시 정각이면 30×3=90도!'};
+}
+
+/* ====== 중복 문제 방지 ====== */
+let recentSigs=[];
+function sigOf(p){
+  switch(p.type){
+    case 'read': return `r:${p.h}:${p.m}`;
+    case 'match': return `m:${p.h}:${p.m}`;
+    case 'after': return `a:${p.h}:${p.m}:${p.H}:${p.M}`;
+    case 'ago': return `g:${p.h}:${p.m}:${p.H}:${p.M}`;
+    case 'unit': return `u:${p.kind}:${p.a}:${p.b||0}`;
+    case 'angle': return `d:${p.h}`;
+  }
+}
+function uniqueProblem(r){
+  let p,tries=0;
+  do{ p=genProblem(r); tries++; }
+  while(tries<60 && recentSigs.includes(sigOf(p)));
+  recentSigs.push(sigOf(p));
+  if(recentSigs.length>14) recentSigs.shift();
+  return p;
+}
+
+/* ====== 시계 SVG ====== */
+function mk(t,attrs){const e=document.createElementNS(NS,t);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function clockSVG(h,m,w){
+  const c=w/2, R=c-6;
+  const svg=mk('svg',{viewBox:`0 0 ${w} ${w}`});
+  svg.classList.add('clock');
+  svg.style.width=w+'px';
+  svg.appendChild(mk('circle',{cx:c,cy:c,r:R,fill:'#FFFDF6',stroke:'#C8B8A0','stroke-width':5}));
+  for(let i=0;i<60;i++){
+    const a=(i*6-90)*Math.PI/180, major=i%5===0, len=major?w*0.045:w*0.02;
+    svg.appendChild(mk('line',{
+      x1:c+(R-len)*Math.cos(a), y1:c+(R-len)*Math.sin(a),
+      x2:c+R*Math.cos(a), y2:c+R*Math.sin(a),
+      stroke:major?'#8A7A5F':'#D8CCAE', 'stroke-width':major?2.5:1.2}));
+  }
+  for(let n=1;n<=12;n++){
+    const a=(n*30-90)*Math.PI/180;
+    const t=mk('text',{
+      x:c+(R-w*0.11)*Math.cos(a), y:c+(R-w*0.11)*Math.sin(a)+w*0.028,
+      'text-anchor':'middle','font-size':w*0.085,'font-family':"'Jua',sans-serif",fill:'#6B5D45'});
+    t.textContent=n;
+    svg.appendChild(t);
+  }
+  const ha=((h%12)*30+m*0.5-90)*Math.PI/180;
+  svg.appendChild(mk('line',{
+    x1:c-w*0.03*Math.cos(ha), y1:c-w*0.03*Math.sin(ha),
+    x2:c+R*0.48*Math.cos(ha), y2:c+R*0.48*Math.sin(ha),
+    stroke:'#E8590C','stroke-width':w*0.035,'stroke-linecap':'round'}));
+  const ma=(m*6-90)*Math.PI/180;
+  svg.appendChild(mk('line',{
+    x1:c-w*0.04*Math.cos(ma), y1:c-w*0.04*Math.sin(ma),
+    x2:c+R*0.72*Math.cos(ma), y2:c+R*0.72*Math.sin(ma),
+    stroke:'#1971C2','stroke-width':w*0.022,'stroke-linecap':'round'}));
+  svg.appendChild(mk('circle',{cx:c,cy:c,r:w*0.028,fill:'#3B3A36'}));
+  return svg;
+}
+
+/* ====== 상태 ====== */
+const ASKERS=['🐱','🐶','🦊','🐻','🐼','🐰','🐯','🦁','🐨','🐵'];
+const TYPE_LABEL={read:'시계 읽기',match:'시계 찾기',after:'시간의 덧셈',ago:'시간의 뺄셈',unit:'시간 단위 바꾸기',angle:'시계 각도'};
+const Q_PER_ROUND=5;
+let startRound=parseInt(localStorage.getItem('clockLevel')||'0',10)||0;
+let round=startRound?startRound:1;
+let qIdx=0, attempts=0, busy=false, streak=0, bestStreak=0;
+let todayStars=0, totalStars=parseInt(localStorage.getItem('clockStars')||'0',10)||0;
+let problem=null, ASKER_SET=shuffle(ASKERS), answerEls=[];
+
+const clockZone=$('clockZone'), bubble=$('bubble'), answerUI=$('answerUI'),
+      feedbackEl=$('feedback'), askerEl=$('asker'), askerEmoji=$('askerEmoji'), streakEl=$('streak');
+
+/* ====== 진행 표시 ====== */
+function updateDots(){
+  const ds=[];
+  for(let i=0;i<Q_PER_ROUND;i++)
+    ds.push(`<span class="dot ${i<qIdx?'done':(i===qIdx?'cur':'')}"></span>`);
+  $('dots').innerHTML=ds.join('');
+  $('roundLabel').textContent=`${round}판`;
+}
+function updateStars(){ $('starsEl').textContent=`⭐ ${totalStars.toLocaleString('ko-KR')}개`; }
+function setFeedback(t,cls){feedbackEl.textContent=t; feedbackEl.className='feedback'+(cls?' '+cls:'');}
+function shake(el){el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');}
+function updateStreak(){streakEl.textContent=streak>=2?`🔥 ${streak}연속 정답!`:'';}
+
+/* ====== 문제 흐름 ====== */
+function bubbleText(p){
+  switch(p.type){
+    case 'read': return `지금 몇 시인지 알려 주세요! 🕐`;
+    case 'match': return `내가 원하는 시각은 <b>${fmtTime(p.h,p.m)}</b>! 똑같은 시계를 찾아 주세요!`;
+    case 'after': return `지금 <b>${fmtTime(p.h,p.m)}</b>이에요. <b>${p.delta}</b> 뒤에는 몇 시일까요?`;
+    case 'ago': return `지금 <b>${fmtTime(p.h,p.m)}</b>이에요. <b>${p.delta}</b> 전에는 몇 시였을까요?`;
+    case 'unit': return `<b>${p.text}</b>은(는) 모두 몇 <b>${p.unit}</b>일까요?`;
+    case 'angle': return `<b>${p.h}시 정각</b>! 시침과 분침이 이루는 각도는 몇 도일까요?`;
+  }
+}
+function setupProblem(){
+  problem=uniqueProblem(round);
+  attempts=0; busy=false; answerEls=[];
+  clockZone.innerHTML=''; answerUI.innerHTML='';
+  askerEmoji.textContent=ASKER_SET[qIdx%ASKER_SET.length];
+  bubble.innerHTML=bubbleText(problem);
+  $('qType').textContent=TYPE_LABEL[problem.type];
+  updateDots(); updateStreak();
+  ({read:renderRead,match:renderMatch,after:renderShift,ago:renderShift,
+    unit:renderUnit,angle:renderAngle})[problem.type]();
+}
+function nextQuestion(){
+  qIdx++;
+  askerEl.classList.remove('happy');
+  if(qIdx>=Q_PER_ROUND){roundEnd(); return;}
+  setupProblem();
+}
+function correct(){
+  busy=true;
+  const earn=attempts===0?2:1;
+  todayStars+=earn; totalStars+=earn;
+  localStorage.setItem('clockStars',String(totalStars));
+  streak++; bestStreak=Math.max(bestStreak,streak);
+  updateStreak(); updateStars();
+  sfx.ok();
+  askerEl.classList.add('happy');
+  setFeedback(`🎉 정답! 별 ${earn}개를 받았어요!`,'good');
+  setTimeout(nextQuestion,1100);
+}
+function wrong(){
+  attempts++; streak=0; updateStreak(); sfx.no();
+  shake(answerUI);
+  if(attempts===1) setFeedback('앗, 한번 더 생각해 볼까요?','bad');
+  else if(attempts===2) setFeedback('💡 '+problem.hint,'bad');
+  else{
+    busy=true;
+    const el=answerEls.find(a=>a.ok);
+    if(el&&el.el)el.el.classList.add('reveal');
+    setFeedback('정답은 이거였어요! 다음 문제로 가요.','bad');
+    setTimeout(nextQuestion,1900);
+  }
+}
+function roundEnd(){
+  busy=true;
+  sfx.win();
+  $('roundMsg').textContent=`이번 판에서 ⭐ ${todayStars}개! 다음 판은 조금 더 어려워져요.`;
+  $('roundStats').textContent=`최고 연속 정답 ${bestStreak}개 · 모은 별 총 ${totalStars.toLocaleString('ko-KR')}개`;
+  $('roundOverlay').classList.add('show');
+}
+$('btnNextRound').addEventListener('click',()=>{
+  $('roundOverlay').classList.remove('show');
+  round++; qIdx=0; todayStars=0; bestStreak=0;
+  ASKER_SET=shuffle(ASKERS);
+  busy=false;
+  setupProblem();
+});
+
+/* ====== 난이도 선택 ====== */
+function showLevelPicker(){
+  $('btnLevelClose').hidden=!startRound;
+  $('levelOverlay').classList.add('show');
+  busy=true;
+}
+function pickLevel(rv){
+  localStorage.setItem('clockLevel',String(rv));
+  startRound=rv;
+  round=rv;
+  qIdx=0; todayStars=0; bestStreak=0;
+  ASKER_SET=shuffle(ASKERS);
+  $('levelOverlay').classList.remove('show');
+  $('roundOverlay').classList.remove('show');
+  busy=false;
+  setupProblem();
+  setFeedback(`${rv}번째 판부터 시작! 판이 지날수록 어려워져요.`);
+}
+document.querySelectorAll('#levelOverlay [data-lv]').forEach(b=>b.addEventListener('click',()=>pickLevel(+b.dataset.lv)));
+$('btnLevelClose').addEventListener('click',()=>{
+  $('levelOverlay').classList.remove('show');
+  busy=$('roundOverlay').classList.contains('show');
+});
+$('btnLevel').addEventListener('click',showLevelPicker);
+
+/* ====== 유형별 화면 ====== */
+function buildChoices(choices){
+  answerUI.innerHTML=''; answerEls=[];
+  choices.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='choice'; b.textContent=c.t;
+    b.addEventListener('click',()=>{ if(busy)return; c.ok?correct():wrong(); });
+    answerUI.appendChild(b);
+    answerEls.push({el:b,ok:c.ok});
+  });
+}
+function renderRead(){
+  clockZone.appendChild(clockSVG(problem.h,problem.m,240));
+  $('qText').innerHTML='시계를 보고 맞는 시각을 골라요!';
+  buildChoices(problem.choices);
+  setFeedback('짧은 바늘(시침)과 긴 바늘(분침)을 확인해요!');
+}
+function renderMatch(){
+  clockZone.innerHTML=`<div class="big-time">🎯 ${fmtTime(problem.h,problem.m)}</div>`;
+  $('qText').innerHTML='주어진 시각과 똑같은 시계를 골라요!';
+  answerUI.innerHTML=''; answerEls=[];
+  problem.choices.forEach(c=>{
+    const w=document.createElement('button');
+    w.className='clock-choice';
+    w.appendChild(clockSVG(c.hh,c.mm,120));
+    w.addEventListener('click',()=>{ if(busy)return; c.ok?correct():wrong(); });
+    answerUI.appendChild(w);
+    answerEls.push({el:w,ok:c.ok});
+  });
+  setFeedback('시침이 숫자 근처 어디를 가리키는지, 분침은 몇 분을 가리키는지 봐요!');
+}
+function renderShift(){
+  clockZone.appendChild(clockSVG(problem.h,problem.m,240));
+  const pill=document.createElement('div');
+  pill.className='delta-pill';
+  pill.textContent=(problem.type==='after'?'⏳ + ':'⏪ − ')+problem.delta;
+  clockZone.appendChild(pill);
+  $('qText').innerHTML=problem.type==='after'
+    ? `${problem.delta} 뒤의 시각을 골라요!`
+    : `${problem.delta} 전의 시각을 골라요!`;
+  buildChoices(problem.choices);
+  setFeedback('현재 시각에서 바늘을 앞으로(뒤로) 돌려 보세요!');
+}
+function renderUnit(){
+  clockZone.innerHTML=`<div class="big-time">${problem.text} = ? ${problem.unit}</div>`;
+  $('qText').innerHTML='큰 단위를 작은 단위로 바꿔서 계산해요!';
+  buildChoices(problem.choices);
+  setFeedback('1시간=60분, 1분=60초를 떠올려요!');
+}
+function renderAngle(){
+  clockZone.appendChild(clockSVG(problem.h,0,240));
+  $('qText').innerHTML=`${problem.h}시 정각의 시계예요! 두 바늘 사이의 각도를 골라요!`;
+  buildChoices(problem.choices);
+  setFeedback('시침은 1시간에 30도씩 움직여요!');
+}
+
+/* ====== 시작 ====== */
+updateStars();
+setupProblem();
+if(!startRound) showLevelPicker();
+</script>
+</body>
+</html>
